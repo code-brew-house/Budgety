@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // URL configured in prisma.config.ts (Prisma 7 pattern)
+}
+
+// ─── BetterAuth-managed tables ───────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  displayName String?
+  avatarUrl   String?
+
+  familyMemberships FamilyMember[]
+  expenses          Expense[]
+  recurringExpenses RecurringExpense[]
+  sessions          Session[]
+  accounts          Account[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
+}
+
+// ─── Application tables ──────────────────────────────────────────
+
+enum FamilyRole {
+  ADMIN
+  MEMBER
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+model Family {
+  id            String   @id @default(cuid())
+  name          String
+  currency      String   @default("INR")
+  monthlyBudget Float?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  members           FamilyMember[]
+  categories        Category[]
+  expenses          Expense[]
+  recurringExpenses RecurringExpense[]
+  categoryBudgets   CategoryBudget[]
+  invites           Invite[]
+}
+
+model Invite {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  familyId  String
+  family    Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy String
+  usedBy    String?
+  usedAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([code])
+}
+
+model FamilyMember {
+  id       String     @id @default(cuid())
+  role     FamilyRole @default(MEMBER)
+  joinedAt DateTime   @default(now())
+  userId   String
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyId String
+  family   Family     @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, familyId])
+}
+
+model Category {
+  id        String  @id @default(cuid())
+  name      String
+  icon      String?
+  isDefault Boolean @default(false)
+  familyId  String?
+  family    Family? @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  expenses          Expense[]
+  recurringExpenses RecurringExpense[]
+  categoryBudgets   CategoryBudget[]
+
+  @@unique([name, familyId])
+}
+
+model CategoryBudget {
+  id         String   @id @default(cuid())
+  month      String // "YYYY-MM"
+  amount     Float
+  familyId   String
+  family     Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([familyId, categoryId, month])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  amount      Float
+  description String
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  familyId    String
+  family      Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+}
+
+model RecurringExpense {
+  id          String    @id @default(cuid())
+  amount      Float
+  description String
+  frequency   Frequency
+  startDate   DateTime
+  endDate     DateTime?
+  nextDueDate DateTime
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  familyId    String
+  family      Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdById String
+  createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Restrict)
+}
