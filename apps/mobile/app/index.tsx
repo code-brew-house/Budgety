@@ -1,22 +1,5 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { Redirect } from 'expo-router';
 
-export default function HomeScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Welcome to Budgety</Text>
-    </View>
-  );
+export default function Index() {
+  return <Redirect href="/(app)/(tabs)" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-  },
-  text: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-});
