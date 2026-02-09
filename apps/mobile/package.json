@@ -12,12 +12,16 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@better-auth/expo": "^1.4.18",
     "@gluestack-style/react": "^1.0.57",
     "@gluestack-ui/themed": "^1.1.73",
+    "@tanstack/react-query": "^5.90.20",
+    "better-auth": "^1.4.18",
     "expo": "~54.0.33",
     "expo-constants": "~18.0.13",
     "expo-linking": "~8.0.11",
     "expo-router": "~6.0.23",
+    "expo-secure-store": "~15.0.8",
     "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "nativewind": "^4.2.1",
@@ -27,7 +31,8 @@
     "react-native-safe-area-context": "~5.6.2",
     "react-native-screens": "~4.16.0",
     "react-native-svg": "^15.15.2",
-    "tailwindcss": "^4.1.18"
+    "tailwindcss": "^4.1.18",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@budgety/typescript-config": "workspace:*",
