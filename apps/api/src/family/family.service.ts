@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { FamilyRole } from '@prisma/client';
 import { CreateFamilyDto } from './dto/create-family.dto';
 import { UpdateFamilyDto } from './dto/update-family.dto';
 
@@ -121,6 +122,60 @@ export class FamilyService {
     });
 
     return { code: invite.code, expiresAt: invite.expiresAt };
+  }
+
+  async updateMemberRole(
+    familyId: string,
+    memberId: string,
+    role: FamilyRole,
+  ) {
+    const member = await this.prisma.familyMember.findUnique({
+      where: { id: memberId },
+    });
+
+    if (!member || member.familyId !== familyId) {
+      throw new NotFoundException('Member not found');
+    }
+
+    if (member.role === 'ADMIN' && role === 'MEMBER') {
+      const adminCount = await this.prisma.familyMember.count({
+        where: { familyId, role: 'ADMIN' },
+      });
+
+      if (adminCount <= 1) {
+        throw new BadRequestException('Cannot demote the last admin');
+      }
+    }
+
+    return this.prisma.familyMember.update({
+      where: { id: memberId },
+      data: { role },
+      select: memberSelect,
+    });
+  }
+
+  async removeMember(familyId: string, memberId: string) {
+    const member = await this.prisma.familyMember.findUnique({
+      where: { id: memberId },
+    });
+
+    if (!member || member.familyId !== familyId) {
+      throw new NotFoundException('Member not found');
+    }
+
+    if (member.role === 'ADMIN') {
+      const adminCount = await this.prisma.familyMember.count({
+        where: { familyId, role: 'ADMIN' },
+      });
+
+      if (adminCount <= 1) {
+        throw new BadRequestException('Cannot remove the last admin');
+      }
+    }
+
+    await this.prisma.familyMember.delete({
+      where: { id: memberId },
+    });
   }
 
   async joinFamily(userId: string, code: string) {

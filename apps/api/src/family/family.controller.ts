@@ -14,6 +14,7 @@ import { FamilyService } from './family.service';
 import { CreateFamilyDto } from './dto/create-family.dto';
 import { JoinFamilyDto } from './dto/join-family.dto';
 import { UpdateFamilyDto } from './dto/update-family.dto';
+import { UpdateMemberDto } from './dto/update-member.dto';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { FamilyGuard } from './guards/family.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -69,6 +70,27 @@ export class FamilyController {
   @RequiredFamilyRole(FamilyRole.ADMIN)
   async remove(@Param('familyId') familyId: string) {
     return this.familyService.remove(familyId);
+  }
+
+  @Patch(':familyId/members/:memberId')
+  @UseGuards(FamilyGuard)
+  @RequiredFamilyRole(FamilyRole.ADMIN)
+  async updateMemberRole(
+    @Param('familyId') familyId: string,
+    @Param('memberId') memberId: string,
+    @Body() dto: UpdateMemberDto,
+  ) {
+    return this.familyService.updateMemberRole(familyId, memberId, dto.role);
+  }
+
+  @Delete(':familyId/members/:memberId')
+  @UseGuards(FamilyGuard)
+  @RequiredFamilyRole(FamilyRole.ADMIN)
+  async removeMember(
+    @Param('familyId') familyId: string,
+    @Param('memberId') memberId: string,
+  ) {
+    return this.familyService.removeMember(familyId, memberId);
   }
 
   @Post(':familyId/invites')

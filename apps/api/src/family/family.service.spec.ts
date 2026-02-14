@@ -46,7 +46,11 @@ describe('FamilyService', () => {
     familyMember: {
       findMany: jest.fn(),
       findFirst: jest.fn(),
+      findUnique: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      count: jest.fn(),
     },
     invite: {
       create: jest.fn(),
@@ -268,6 +272,126 @@ describe('FamilyService', () => {
       });
 
       jest.restoreAllMocks();
+    });
+  });
+
+  describe('updateMemberRole', () => {
+    it('should update member role', async () => {
+      const mockMember = {
+        id: 'member-1',
+        familyId: 'family-123',
+        role: 'MEMBER',
+        userId: 'user-456',
+      };
+
+      const mockUpdatedMember = {
+        id: 'member-1',
+        role: 'ADMIN',
+        joinedAt: new Date(),
+        userId: 'user-456',
+        user: {
+          id: 'user-456',
+          name: 'Jane',
+          email: 'jane@example.com',
+          displayName: null,
+          avatarUrl: null,
+        },
+      };
+
+      mockPrismaService.familyMember.findUnique.mockResolvedValue(mockMember);
+      mockPrismaService.familyMember.update.mockResolvedValue(
+        mockUpdatedMember,
+      );
+
+      const result = await service.updateMemberRole(
+        'family-123',
+        'member-1',
+        'ADMIN',
+      );
+
+      expect(result).toEqual(mockUpdatedMember);
+      expect(prisma.familyMember.update).toHaveBeenCalledWith({
+        where: { id: 'member-1' },
+        data: { role: 'ADMIN' },
+        select: memberSelect,
+      });
+    });
+
+    it('should throw NotFoundException when member not found', async () => {
+      mockPrismaService.familyMember.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.updateMemberRole('family-123', 'nonexistent', 'ADMIN'),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        service.updateMemberRole('family-123', 'nonexistent', 'ADMIN'),
+      ).rejects.toThrow('Member not found');
+    });
+
+    it('should throw BadRequestException when demoting last admin', async () => {
+      const mockMember = {
+        id: 'member-1',
+        familyId: 'family-123',
+        role: 'ADMIN',
+        userId: 'user-123',
+      };
+
+      mockPrismaService.familyMember.findUnique.mockResolvedValue(mockMember);
+      mockPrismaService.familyMember.count.mockResolvedValue(1);
+
+      await expect(
+        service.updateMemberRole('family-123', 'member-1', 'MEMBER'),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.updateMemberRole('family-123', 'member-1', 'MEMBER'),
+      ).rejects.toThrow('Cannot demote the last admin');
+    });
+  });
+
+  describe('removeMember', () => {
+    it('should remove member', async () => {
+      const mockMember = {
+        id: 'member-1',
+        familyId: 'family-123',
+        role: 'MEMBER',
+        userId: 'user-456',
+      };
+
+      mockPrismaService.familyMember.findUnique.mockResolvedValue(mockMember);
+      mockPrismaService.familyMember.delete.mockResolvedValue(mockMember);
+
+      await service.removeMember('family-123', 'member-1');
+
+      expect(prisma.familyMember.delete).toHaveBeenCalledWith({
+        where: { id: 'member-1' },
+      });
+    });
+
+    it('should throw NotFoundException when member not found', async () => {
+      mockPrismaService.familyMember.findUnique.mockResolvedValue(null);
+
+      await expect(
+        service.removeMember('family-123', 'nonexistent'),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException when removing last admin', async () => {
+      const mockMember = {
+        id: 'member-1',
+        familyId: 'family-123',
+        role: 'ADMIN',
+        userId: 'user-123',
+      };
+
+      mockPrismaService.familyMember.findUnique.mockResolvedValue(mockMember);
+      mockPrismaService.familyMember.count.mockResolvedValue(1);
+
+      await expect(
+        service.removeMember('family-123', 'member-1'),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.removeMember('family-123', 'member-1'),
+      ).rejects.toThrow('Cannot remove the last admin');
     });
   });
 

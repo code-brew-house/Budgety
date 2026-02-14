@@ -2,6 +2,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CreateFamilyDto } from './dto/create-family.dto';
 import { UpdateFamilyDto } from './dto/update-family.dto';
+import { UpdateMemberDto } from './dto/update-member.dto';
 
 jest.mock('better-auth', () => ({
   betterAuth: jest.fn(),
@@ -32,6 +33,8 @@ describe('FamilyController', () => {
     remove: jest.fn(),
     createInvite: jest.fn(),
     joinFamily: jest.fn(),
+    updateMemberRole: jest.fn(),
+    removeMember: jest.fn(),
   };
 
   const mockUser = { id: 'user-123' };
@@ -163,6 +166,53 @@ describe('FamilyController', () => {
 
       expect(result).toEqual(mockFamily);
       expect(service.joinFamily).toHaveBeenCalledWith('user-123', 'AB12CD');
+    });
+  });
+
+  describe('updateMemberRole', () => {
+    it('should update a member role', async () => {
+      const mockUpdatedMember = {
+        id: 'member-1',
+        role: 'ADMIN',
+        joinedAt: new Date(),
+        userId: 'user-456',
+        user: {
+          id: 'user-456',
+          name: 'Jane',
+          email: 'jane@example.com',
+          displayName: null,
+          avatarUrl: null,
+        },
+      };
+
+      const dto: UpdateMemberDto = { role: 'ADMIN' as any };
+      mockFamilyService.updateMemberRole.mockResolvedValue(mockUpdatedMember);
+
+      const result = await controller.updateMemberRole(
+        'family-456',
+        'member-1',
+        dto,
+      );
+
+      expect(result).toEqual(mockUpdatedMember);
+      expect(service.updateMemberRole).toHaveBeenCalledWith(
+        'family-456',
+        'member-1',
+        'ADMIN',
+      );
+    });
+  });
+
+  describe('removeMember', () => {
+    it('should remove a member', async () => {
+      mockFamilyService.removeMember.mockResolvedValue(undefined);
+
+      await controller.removeMember('family-456', 'member-1');
+
+      expect(service.removeMember).toHaveBeenCalledWith(
+        'family-456',
+        'member-1',
+      );
     });
   });
 });
