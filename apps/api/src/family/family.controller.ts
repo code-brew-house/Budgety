@@ -1,0 +1,64 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { FamilyRole } from '@prisma/client';
+import { FamilyService } from './family.service';
+import { CreateFamilyDto } from './dto/create-family.dto';
+import { UpdateFamilyDto } from './dto/update-family.dto';
+import { SessionGuard } from '../auth/guards/session.guard';
+import { FamilyGuard } from './guards/family.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequiredFamilyRole } from './decorators/required-family-role.decorator';
+
+@ApiTags('Family')
+@ApiBearerAuth()
+@Controller('families')
+@UseGuards(SessionGuard)
+export class FamilyController {
+  constructor(private readonly familyService: FamilyService) {}
+
+  @Post()
+  async create(
+    @CurrentUser() user: { id: string },
+    @Body() dto: CreateFamilyDto,
+  ) {
+    return this.familyService.create(user.id, dto);
+  }
+
+  @Get()
+  async findAll(@CurrentUser() user: { id: string }) {
+    return this.familyService.findAllByUser(user.id);
+  }
+
+  @Get(':familyId')
+  @UseGuards(FamilyGuard)
+  @RequiredFamilyRole(FamilyRole.MEMBER)
+  async findOne(@Param('familyId') familyId: string) {
+    return this.familyService.findById(familyId);
+  }
+
+  @Patch(':familyId')
+  @UseGuards(FamilyGuard)
+  @RequiredFamilyRole(FamilyRole.ADMIN)
+  async update(
+    @Param('familyId') familyId: string,
+    @Body() dto: UpdateFamilyDto,
+  ) {
+    return this.familyService.update(familyId, dto);
+  }
+
+  @Delete(':familyId')
+  @UseGuards(FamilyGuard)
+  @RequiredFamilyRole(FamilyRole.ADMIN)
+  async remove(@Param('familyId') familyId: string) {
+    return this.familyService.remove(familyId);
+  }
+}
