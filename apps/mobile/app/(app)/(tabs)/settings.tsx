@@ -42,6 +42,23 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       ))}
 
+      {activeFamilyId && (
+        <View className="flex-row gap-3 mb-3">
+          <TouchableOpacity
+            className="flex-1 border border-gray-300 rounded-lg py-3 items-center"
+            onPress={() => router.push('/(app)/family/members')}
+          >
+            <Text className="font-medium text-sm">Members</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="flex-1 border border-gray-300 rounded-lg py-3 items-center"
+            onPress={() => router.push('/(app)/family/categories')}
+          >
+            <Text className="font-medium text-sm">Categories</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View className="flex-row gap-3 mt-3 mb-6">
         <TouchableOpacity
           className="flex-1 bg-black rounded-lg py-3 items-center"

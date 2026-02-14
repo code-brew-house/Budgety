@@ -43,6 +43,14 @@ export default function AppLayout() {
         name="expense/add"
         options={{ headerShown: true, title: 'Add Expense', presentation: 'modal' }}
       />
+      <Stack.Screen
+        name="family/members"
+        options={{ headerShown: true, title: 'Members', presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="family/categories"
+        options={{ headerShown: true, title: 'Categories', presentation: 'modal' }}
+      />
     </Stack>
   );
 }
