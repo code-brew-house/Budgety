@@ -1,9 +1,20 @@
+import { useEffect } from 'react';
 import { Redirect, Stack } from 'expo-router';
 import { authClient } from '@/lib/auth';
 import { View, ActivityIndicator } from 'react-native';
+import { useFamilies } from '@/hooks/useFamilies';
+import { useFamilyStore } from '@/stores/familyStore';
 
 export default function AppLayout() {
   const { data: session, isPending } = authClient.useSession();
+  const { data: families } = useFamilies();
+  const { activeFamilyId, setActiveFamilyId } = useFamilyStore();
+
+  useEffect(() => {
+    if (families && families.length > 0 && !activeFamilyId) {
+      setActiveFamilyId(families[0]!.id);
+    }
+  }, [families, activeFamilyId, setActiveFamilyId]);
 
   if (isPending) {
     return (
@@ -17,5 +28,17 @@ export default function AppLayout() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen
+        name="family/create"
+        options={{ headerShown: true, title: 'Create Family', presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="family/join"
+        options={{ headerShown: true, title: 'Join Family', presentation: 'modal' }}
+      />
+    </Stack>
+  );
 }
