@@ -39,6 +39,10 @@ export default function AppLayout() {
         name="family/join"
         options={{ headerShown: true, title: 'Join Family', presentation: 'modal' }}
       />
+      <Stack.Screen
+        name="expense/add"
+        options={{ headerShown: true, title: 'Add Expense', presentation: 'modal' }}
+      />
     </Stack>
   );
 }
