@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { FamilyService } from './family.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFamilyDto } from './dto/create-family.dto';
@@ -45,7 +45,13 @@ describe('FamilyService', () => {
     },
     familyMember: {
       findMany: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
+    },
+    invite: {
+      create: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
     },
     $transaction: jest.fn(),
   };
@@ -230,6 +236,128 @@ describe('FamilyService', () => {
       expect(prisma.family.delete).toHaveBeenCalledWith({
         where: { id: 'family-123' },
       });
+    });
+  });
+
+  describe('createInvite', () => {
+    it('should create invite with 6-char code and 24h expiry', async () => {
+      const now = Date.now();
+      jest.spyOn(Date, 'now').mockReturnValue(now);
+
+      const mockInvite = {
+        id: 'invite-1',
+        code: 'AB12CD',
+        familyId: 'family-123',
+        createdBy: 'user-123',
+        expiresAt: new Date(now + 24 * 60 * 60 * 1000),
+      };
+
+      mockPrismaService.invite.create.mockResolvedValue(mockInvite);
+
+      const result = await service.createInvite('family-123', 'user-123');
+
+      expect(result.code).toHaveLength(6);
+      expect(result.expiresAt).toEqual(
+        new Date(now + 24 * 60 * 60 * 1000),
+      );
+      expect(prisma.invite.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          familyId: 'family-123',
+          createdBy: 'user-123',
+        }),
+      });
+
+      jest.restoreAllMocks();
+    });
+  });
+
+  describe('joinFamily', () => {
+    it('should join family with valid code', async () => {
+      const mockInvite = {
+        id: 'invite-1',
+        code: 'AB12CD',
+        familyId: 'family-123',
+        usedBy: null,
+        expiresAt: new Date(Date.now() + 100000),
+      };
+
+      const mockFamily = {
+        id: 'family-123',
+        name: 'Test Family',
+        currency: 'INR',
+        monthlyBudget: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      mockPrismaService.$transaction.mockImplementation(async (cb) => {
+        const tx = {
+          invite: {
+            findFirst: jest.fn().mockResolvedValue(mockInvite),
+            update: jest.fn().mockResolvedValue({}),
+          },
+          familyMember: {
+            findFirst: jest.fn().mockResolvedValue(null),
+            create: jest.fn().mockResolvedValue({}),
+          },
+          family: {
+            findUnique: jest.fn().mockResolvedValue(mockFamily),
+          },
+        };
+        return cb(tx);
+      });
+
+      const result = await service.joinFamily('user-456', 'AB12CD');
+
+      expect(result).toEqual(mockFamily);
+      expect(prisma.$transaction).toHaveBeenCalled();
+    });
+
+    it('should throw on invalid/expired code', async () => {
+      mockPrismaService.$transaction.mockImplementation(async (cb) => {
+        const tx = {
+          invite: {
+            findFirst: jest.fn().mockResolvedValue(null),
+          },
+        };
+        return cb(tx);
+      });
+
+      await expect(
+        service.joinFamily('user-456', 'BADCOD'),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.joinFamily('user-456', 'BADCOD'),
+      ).rejects.toThrow('Invalid or expired invite code');
+    });
+
+    it('should throw if already a member', async () => {
+      const mockInvite = {
+        id: 'invite-1',
+        code: 'AB12CD',
+        familyId: 'family-123',
+        usedBy: null,
+        expiresAt: new Date(Date.now() + 100000),
+      };
+
+      mockPrismaService.$transaction.mockImplementation(async (cb) => {
+        const tx = {
+          invite: {
+            findFirst: jest.fn().mockResolvedValue(mockInvite),
+          },
+          familyMember: {
+            findFirst: jest.fn().mockResolvedValue({ id: 'member-1' }),
+          },
+        };
+        return cb(tx);
+      });
+
+      await expect(
+        service.joinFamily('user-456', 'AB12CD'),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.joinFamily('user-456', 'AB12CD'),
+      ).rejects.toThrow('Already a member of this family');
     });
   });
 });

@@ -12,6 +12,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FamilyRole } from '@prisma/client';
 import { FamilyService } from './family.service';
 import { CreateFamilyDto } from './dto/create-family.dto';
+import { JoinFamilyDto } from './dto/join-family.dto';
 import { UpdateFamilyDto } from './dto/update-family.dto';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { FamilyGuard } from './guards/family.guard';
@@ -38,6 +39,14 @@ export class FamilyController {
     return this.familyService.findAllByUser(user.id);
   }
 
+  @Post('join')
+  async join(
+    @CurrentUser() user: { id: string },
+    @Body() dto: JoinFamilyDto,
+  ) {
+    return this.familyService.joinFamily(user.id, dto.code);
+  }
+
   @Get(':familyId')
   @UseGuards(FamilyGuard)
   @RequiredFamilyRole(FamilyRole.MEMBER)
@@ -60,5 +69,15 @@ export class FamilyController {
   @RequiredFamilyRole(FamilyRole.ADMIN)
   async remove(@Param('familyId') familyId: string) {
     return this.familyService.remove(familyId);
+  }
+
+  @Post(':familyId/invites')
+  @UseGuards(FamilyGuard)
+  @RequiredFamilyRole(FamilyRole.ADMIN)
+  async createInvite(
+    @Param('familyId') familyId: string,
+    @CurrentUser() user: { id: string },
+  ) {
+    return this.familyService.createInvite(familyId, user.id);
   }
 }

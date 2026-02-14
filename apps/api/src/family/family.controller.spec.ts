@@ -30,6 +30,8 @@ describe('FamilyController', () => {
     findById: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
+    createInvite: jest.fn(),
+    joinFamily: jest.fn(),
   };
 
   const mockUser = { id: 'user-123' };
@@ -131,6 +133,36 @@ describe('FamilyController', () => {
 
       expect(result).toEqual(mockFamily);
       expect(service.remove).toHaveBeenCalledWith('family-456');
+    });
+  });
+
+  describe('createInvite', () => {
+    it('should create an invite and return code with expiry', async () => {
+      const mockInviteResult = {
+        code: 'AB12CD',
+        expiresAt: new Date(),
+      };
+
+      mockFamilyService.createInvite.mockResolvedValue(mockInviteResult);
+
+      const result = await controller.createInvite('family-456', mockUser);
+
+      expect(result).toEqual(mockInviteResult);
+      expect(service.createInvite).toHaveBeenCalledWith(
+        'family-456',
+        'user-123',
+      );
+    });
+  });
+
+  describe('join', () => {
+    it('should join a family with a valid code', async () => {
+      mockFamilyService.joinFamily.mockResolvedValue(mockFamily);
+
+      const result = await controller.join(mockUser, { code: 'AB12CD' });
+
+      expect(result).toEqual(mockFamily);
+      expect(service.joinFamily).toHaveBeenCalledWith('user-123', 'AB12CD');
     });
   });
 });

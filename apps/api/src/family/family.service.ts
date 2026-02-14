@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import * as crypto from 'crypto';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateFamilyDto } from './dto/create-family.dto';
@@ -94,6 +99,75 @@ export class FamilyService {
   async remove(familyId: string) {
     return this.prisma.family.delete({
       where: { id: familyId },
+    });
+  }
+
+  async createInvite(familyId: string, userId: string) {
+    const code = crypto
+      .randomBytes(4)
+      .toString('hex')
+      .slice(0, 6)
+      .toUpperCase();
+
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    const invite = await this.prisma.invite.create({
+      data: {
+        code,
+        familyId,
+        createdBy: userId,
+        expiresAt,
+      },
+    });
+
+    return { code: invite.code, expiresAt: invite.expiresAt };
+  }
+
+  async joinFamily(userId: string, code: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const invite = await tx.invite.findFirst({
+        where: {
+          code,
+          usedBy: null,
+          expiresAt: { gt: new Date() },
+        },
+      });
+
+      if (!invite) {
+        throw new BadRequestException('Invalid or expired invite code');
+      }
+
+      const existingMember = await tx.familyMember.findFirst({
+        where: {
+          userId,
+          familyId: invite.familyId,
+        },
+      });
+
+      if (existingMember) {
+        throw new BadRequestException('Already a member of this family');
+      }
+
+      await tx.familyMember.create({
+        data: {
+          userId,
+          familyId: invite.familyId,
+          role: 'MEMBER',
+        },
+      });
+
+      await tx.invite.update({
+        where: { id: invite.id },
+        data: {
+          usedBy: userId,
+          usedAt: new Date(),
+        },
+      });
+
+      return tx.family.findUnique({
+        where: { id: invite.familyId },
+        select: familySelect,
+      });
     });
   }
 }
