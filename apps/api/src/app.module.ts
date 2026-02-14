@@ -9,6 +9,7 @@ import { FamilyModule } from './family/family.module';
 import { CategoryModule } from './category/category.module';
 import { ExpenseModule } from './expense/expense.module';
 import { BudgetModule } from './budget/budget.module';
+import { ReportModule } from './report/report.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { BudgetModule } from './budget/budget.module';
     CategoryModule,
     ExpenseModule,
     BudgetModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService],
