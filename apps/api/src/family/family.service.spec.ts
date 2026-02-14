@@ -11,6 +11,7 @@ const familySelect = {
   name: true,
   currency: true,
   monthlyBudget: true,
+  largeExpenseThreshold: true,
   createdAt: true,
   updatedAt: true,
 };
