@@ -1,12 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
+function parseMonth(month: string): [number, number] {
+  const parts = month.split('-').map(Number);
+  return [parts[0]!, parts[1]!];
+}
+
 @Injectable()
 export class ReportService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getMemberSpending(familyId: string, month: string) {
-    const [year, mon] = month.split('-').map(Number);
+    const [year, mon] = parseMonth(month);
     const startDate = new Date(year, mon - 1, 1);
     const endDate = new Date(year, mon, 1);
 
@@ -85,7 +90,7 @@ export class ReportService {
       .map((m, index) => {
         const user = userMap.get(m.createdById);
         const memberSpent = m._sum.amount ?? 0;
-        const categoryGroups = memberCategoryResults[index];
+        const categoryGroups = memberCategoryResults[index] ?? [];
 
         return {
           userId: m.createdById,
@@ -123,7 +128,7 @@ export class ReportService {
   }
 
   async getBudgetUtilization(familyId: string, month: string) {
-    const [year, mon] = month.split('-').map(Number);
+    const [year, mon] = parseMonth(month);
     const startDate = new Date(year, mon - 1, 1);
     const endDate = new Date(year, mon, 1);
 
