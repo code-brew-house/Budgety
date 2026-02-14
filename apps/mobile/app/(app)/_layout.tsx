@@ -51,6 +51,10 @@ export default function AppLayout() {
         name="family/categories"
         options={{ headerShown: true, title: 'Categories', presentation: 'modal' }}
       />
+      <Stack.Screen
+        name="budget/manage"
+        options={{ headerShown: true, title: 'Budget', presentation: 'modal' }}
+      />
     </Stack>
   );
 }

@@ -59,6 +59,15 @@ export default function SettingsScreen() {
         </View>
       )}
 
+      {activeFamilyId && (
+        <TouchableOpacity
+          className="border border-gray-300 rounded-lg py-3 items-center mb-3"
+          onPress={() => router.push('/(app)/budget/manage')}
+        >
+          <Text className="font-medium text-sm">Manage Budget</Text>
+        </TouchableOpacity>
+      )}
+
       <View className="flex-row gap-3 mt-3 mb-6">
         <TouchableOpacity
           className="flex-1 bg-black rounded-lg py-3 items-center"
