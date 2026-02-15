@@ -25,6 +25,10 @@ describe('ReportController', () => {
   const mockReportService = {
     getMemberSpending: jest.fn(),
     getBudgetUtilization: jest.fn(),
+    getCategorySplit: jest.fn(),
+    getDailySpending: jest.fn(),
+    getMonthlyTrend: jest.fn(),
+    getTopExpenses: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -94,6 +98,90 @@ describe('ReportController', () => {
       expect(service.getBudgetUtilization).toHaveBeenCalledWith(
         'family-123',
         '2026-02',
+      );
+    });
+  });
+
+  describe('GET /families/:familyId/reports/category-split', () => {
+    it('should call getCategorySplit with correct params', async () => {
+      const mockResult = { month: '2026-02', categories: [] };
+      mockReportService.getCategorySplit.mockResolvedValue(mockResult);
+
+      const result = await controller.getCategorySplit('family-123', '2026-02');
+
+      expect(result).toEqual(mockResult);
+      expect(service.getCategorySplit).toHaveBeenCalledWith(
+        'family-123',
+        '2026-02',
+      );
+    });
+  });
+
+  describe('GET /families/:familyId/reports/daily-spending', () => {
+    it('should call getDailySpending with correct params', async () => {
+      const mockResult = { month: '2026-02', days: [] };
+      mockReportService.getDailySpending.mockResolvedValue(mockResult);
+
+      const result = await controller.getDailySpending('family-123', '2026-02');
+
+      expect(result).toEqual(mockResult);
+      expect(service.getDailySpending).toHaveBeenCalledWith(
+        'family-123',
+        '2026-02',
+      );
+    });
+  });
+
+  describe('GET /families/:familyId/reports/monthly-trend', () => {
+    it('should call getMonthlyTrend with correct params', async () => {
+      const mockResult = { months: [] };
+      mockReportService.getMonthlyTrend.mockResolvedValue(mockResult);
+
+      const result = await controller.getMonthlyTrend('family-123', '6');
+
+      expect(result).toEqual(mockResult);
+      expect(service.getMonthlyTrend).toHaveBeenCalledWith('family-123', 6);
+    });
+
+    it('should default to 6 months when not provided', async () => {
+      const mockResult = { months: [] };
+      mockReportService.getMonthlyTrend.mockResolvedValue(mockResult);
+
+      await controller.getMonthlyTrend('family-123', '');
+
+      expect(service.getMonthlyTrend).toHaveBeenCalledWith('family-123', 6);
+    });
+  });
+
+  describe('GET /families/:familyId/reports/top-expenses', () => {
+    it('should call getTopExpenses with correct params', async () => {
+      const mockResult = { month: '2026-02', expenses: [] };
+      mockReportService.getTopExpenses.mockResolvedValue(mockResult);
+
+      const result = await controller.getTopExpenses(
+        'family-123',
+        '2026-02',
+        '5',
+      );
+
+      expect(result).toEqual(mockResult);
+      expect(service.getTopExpenses).toHaveBeenCalledWith(
+        'family-123',
+        '2026-02',
+        5,
+      );
+    });
+
+    it('should default to 10 when limit not provided', async () => {
+      const mockResult = { month: '2026-02', expenses: [] };
+      mockReportService.getTopExpenses.mockResolvedValue(mockResult);
+
+      await controller.getTopExpenses('family-123', '2026-02', '');
+
+      expect(service.getTopExpenses).toHaveBeenCalledWith(
+        'family-123',
+        '2026-02',
+        10,
       );
     });
   });
