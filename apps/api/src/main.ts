@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
@@ -10,6 +11,14 @@ import { GlobalExceptionFilter } from './common/http-exception.filter';
 
 async function bootstrap() {
   const server = express();
+
+  // Enable CORS before BetterAuth so auth routes also get CORS headers
+  server.use(
+    cors({
+      origin: true,
+      credentials: true,
+    }),
+  );
 
   // Mount BetterAuth BEFORE body parser — it needs the raw request body
   // Express v5 uses {*any} wildcard syntax (not * like v4)
