@@ -2,7 +2,17 @@ import { useState } from 'react';
 import { View, Text, ScrollView, RefreshControl } from 'react-native';
 import { TouchableOpacity } from 'react-native';
 import { useFamilyStore } from '@/stores/familyStore';
-import { useMemberSpending, useBudgetUtilization } from '@/hooks/useReports';
+import {
+  useMemberSpending,
+  useBudgetUtilization,
+  useCategorySplit,
+  useDailySpending,
+  useMonthlyTrend,
+  useTopExpenses,
+} from '@/hooks/useReports';
+import { CategoryDonut } from '@/components/charts/CategoryDonut';
+import { DailySpendingBar } from '@/components/charts/DailySpendingBar';
+import { MonthlyTrendLine } from '@/components/charts/MonthlyTrendLine';
 
 function getCurrentMonth() {
   const now = new Date();
@@ -43,11 +53,35 @@ export default function ReportsScreen() {
     refetch: refetchUtilization,
   } = useBudgetUtilization(activeFamilyId, month);
 
+  const {
+    data: categorySplit,
+    refetch: refetchCategorySplit,
+  } = useCategorySplit(activeFamilyId, month);
+
+  const {
+    data: dailySpending,
+    refetch: refetchDailySpending,
+  } = useDailySpending(activeFamilyId, month);
+
+  const {
+    data: monthlyTrend,
+    refetch: refetchMonthlyTrend,
+  } = useMonthlyTrend(activeFamilyId);
+
+  const {
+    data: topExpenses,
+    refetch: refetchTopExpenses,
+  } = useTopExpenses(activeFamilyId, month);
+
   const refreshing = spendingLoading || utilizationLoading;
 
   const handleRefresh = () => {
     refetchSpending();
     refetchUtilization();
+    refetchCategorySplit();
+    refetchDailySpending();
+    refetchMonthlyTrend();
+    refetchTopExpenses();
   };
 
   if (!activeFamilyId) {
@@ -140,10 +174,40 @@ export default function ReportsScreen() {
         </View>
       )}
 
+      {/* Category Split Donut */}
+      {categorySplit && categorySplit.categories.length > 0 && (
+        <View className="mt-4 px-4">
+          <Text className="text-base font-semibold mb-2">Category Split</Text>
+          <View className="bg-white border border-gray-100 rounded-lg p-4">
+            <CategoryDonut data={categorySplit.categories} />
+          </View>
+        </View>
+      )}
+
+      {/* Daily Spending Bar Chart */}
+      {dailySpending && dailySpending.days.length > 0 && (
+        <View className="mt-4 px-4">
+          <Text className="text-base font-semibold mb-2">Daily Spending</Text>
+          <View className="bg-white border border-gray-100 rounded-lg p-4">
+            <DailySpendingBar data={dailySpending.days} />
+          </View>
+        </View>
+      )}
+
+      {/* Monthly Trend Line Chart */}
+      {monthlyTrend && monthlyTrend.months.length > 0 && (
+        <View className="mt-4 px-4">
+          <Text className="text-base font-semibold mb-2">Monthly Trend</Text>
+          <View className="bg-white border border-gray-100 rounded-lg p-4">
+            <MonthlyTrendLine data={monthlyTrend.months} />
+          </View>
+        </View>
+      )}
+
       {/* Category Budget Utilization */}
       {utilization && utilization.categories.length > 0 && (
         <View className="mt-4 px-4">
-          <Text className="text-base font-semibold mb-2">Category Breakdown</Text>
+          <Text className="text-base font-semibold mb-2">Category Budget</Text>
           {utilization.categories.map((cat) => {
             const catColor = getColor(cat.utilizationPercent);
             return (
@@ -168,6 +232,30 @@ export default function ReportsScreen() {
               </View>
             );
           })}
+        </View>
+      )}
+
+      {/* Top Expenses */}
+      {topExpenses && topExpenses.expenses.length > 0 && (
+        <View className="mt-4 px-4">
+          <Text className="text-base font-semibold mb-2">Top Expenses</Text>
+          {topExpenses.expenses.map((expense) => (
+            <View key={expense.id} className="bg-white border border-gray-100 rounded-lg p-4 mb-2">
+              <View className="flex-row justify-between items-start">
+                <View className="flex-1 mr-3">
+                  <Text className="font-medium">{expense.description}</Text>
+                  <Text className="text-xs text-gray-500 mt-1">
+                    {expense.category.icon ? `${expense.category.icon} ` : ''}{expense.category.name}
+                    {' · '}
+                    {expense.createdBy.displayName || expense.createdBy.name}
+                  </Text>
+                </View>
+                <Text className="font-semibold">
+                  ₹{expense.amount.toLocaleString('en-IN')}
+                </Text>
+              </View>
+            </View>
+          ))}
         </View>
       )}
 
