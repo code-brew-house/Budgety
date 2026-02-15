@@ -6,6 +6,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { toNodeHandler } from 'better-auth/node';
 import { auth } from './auth/auth';
 import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './common/http-exception.filter';
 
 async function bootstrap() {
   const server = express();
@@ -15,6 +16,13 @@ async function bootstrap() {
   server.all('/api/auth/{*any}', toNodeHandler(auth));
 
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+
+  app.enableCors({
+    origin: true,
+    credentials: true,
+  });
+
+  app.useGlobalFilters(new GlobalExceptionFilter());
 
   // Validation
   app.useGlobalPipes(
@@ -36,4 +44,4 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
 }
-bootstrap();
+void bootstrap();
