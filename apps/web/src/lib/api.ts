@@ -15,7 +15,6 @@ export async function apiFetch<T>(
 
   if (!res.ok) {
     if (res.status === 401) {
-      window.location.href = '/login';
       throw new Error('Session expired');
     }
     const error = await res.json().catch(() => ({ message: res.statusText }));
