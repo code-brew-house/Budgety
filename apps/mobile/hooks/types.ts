@@ -135,6 +135,31 @@ export interface TopExpenses {
   expenses: Expense[];
 }
 
+export interface RecurringExpense {
+  id: string;
+  amount: number;
+  description: string;
+  frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  startDate: string;
+  endDate: string | null;
+  nextDueDate: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  categoryId: string;
+  familyId: string;
+  createdById: string;
+  category: { id: string; name: string; icon: string | null };
+  createdBy: { id: string; name: string; displayName: string | null; avatarUrl: string | null };
+}
+
+export interface PaginatedRecurringExpenses {
+  data: RecurringExpense[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export interface Invite {
   code: string;
   expiresAt: string;
