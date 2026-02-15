@@ -9,7 +9,7 @@ describe('ReportService', () => {
 
   const mockPrismaService = {
     family: { findUnique: jest.fn() },
-    expense: { groupBy: jest.fn() },
+    expense: { groupBy: jest.fn(), findMany: jest.fn() },
     user: { findMany: jest.fn() },
     category: { findMany: jest.fn() },
     categoryBudget: { findMany: jest.fn() },
@@ -223,6 +223,113 @@ describe('ReportService', () => {
         month: '2026-02',
         categories: [],
       });
+    });
+  });
+
+  describe('getCategorySplit', () => {
+    it('should return categories with correct percentages', async () => {
+      mockPrismaService.expense.groupBy.mockResolvedValue([
+        { categoryId: 'cat-1', _sum: { amount: 3000 } },
+        { categoryId: 'cat-2', _sum: { amount: 2000 } },
+      ]);
+
+      mockPrismaService.category.findMany.mockResolvedValue([
+        { id: 'cat-1', name: 'Food', icon: '🍔' },
+        { id: 'cat-2', name: 'Transport', icon: '🚗' },
+      ]);
+
+      const result = await service.getCategorySplit('family-123', '2026-02');
+
+      expect(result).toEqual({
+        month: '2026-02',
+        categories: [
+          {
+            categoryId: 'cat-1',
+            name: 'Food',
+            icon: '🍔',
+            amount: 3000,
+            percent: 60,
+          },
+          {
+            categoryId: 'cat-2',
+            name: 'Transport',
+            icon: '🚗',
+            amount: 2000,
+            percent: 40,
+          },
+        ],
+      });
+    });
+
+    it('should return empty categories when no expenses', async () => {
+      mockPrismaService.expense.groupBy.mockResolvedValue([]);
+
+      const result = await service.getCategorySplit('family-123', '2026-02');
+
+      expect(result).toEqual({
+        month: '2026-02',
+        categories: [],
+      });
+    });
+  });
+
+  describe('getDailySpending', () => {
+    it('should return daily spending with correct date format', async () => {
+      mockPrismaService.expense.groupBy.mockResolvedValue([
+        { date: new Date('2026-02-01T00:00:00.000Z'), _sum: { amount: 500 } },
+        { date: new Date('2026-02-03T00:00:00.000Z'), _sum: { amount: 1200 } },
+      ]);
+
+      const result = await service.getDailySpending('family-123', '2026-02');
+
+      expect(result).toEqual({
+        month: '2026-02',
+        days: [
+          { date: '2026-02-01', amount: 500 },
+          { date: '2026-02-03', amount: 1200 },
+        ],
+      });
+    });
+  });
+
+  describe('getMonthlyTrend', () => {
+    it('should return correct structure with zero-filled months', async () => {
+      mockPrismaService.expense.findMany.mockResolvedValue([]);
+
+      const result = await service.getMonthlyTrend('family-123', 3);
+
+      expect(result.months).toHaveLength(3);
+      expect(result.months[0]).toHaveProperty('month');
+      expect(result.months[0]).toHaveProperty('amount');
+      expect(result.months[0].amount).toBe(0);
+    });
+  });
+
+  describe('getTopExpenses', () => {
+    it('should return top expenses ordered by amount', async () => {
+      mockPrismaService.expense.findMany.mockResolvedValue([
+        {
+          id: 'exp-1',
+          amount: 5000,
+          description: 'Dinner',
+          date: new Date('2026-02-10'),
+          categoryId: 'cat-1',
+          category: { id: 'cat-1', name: 'Food', icon: null },
+          createdById: 'user-1',
+          createdBy: {
+            id: 'user-1',
+            name: 'Alice',
+            displayName: 'Ali',
+            avatarUrl: null,
+          },
+        },
+      ]);
+
+      const result = await service.getTopExpenses('family-123', '2026-02', 5);
+
+      expect(result.month).toBe('2026-02');
+      expect(result.expenses).toHaveLength(1);
+      expect(result.expenses[0].amount).toBe(5000);
     });
   });
 });
