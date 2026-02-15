@@ -75,10 +75,7 @@ describe('CategoryService', () => {
       expect(result).toEqual([customCategory, defaultCategory]);
       expect(prisma.category.findMany).toHaveBeenCalledWith({
         where: {
-          OR: [
-            { isDefault: true, familyId: null },
-            { familyId: 'family-123' },
-          ],
+          OR: [{ isDefault: true, familyId: null }, { familyId: 'family-123' }],
         },
         select: categorySelect,
         orderBy: { name: 'asc' },
@@ -135,9 +132,7 @@ describe('CategoryService', () => {
         name: 'Updated Name',
       };
 
-      mockPrismaService.category.findUnique.mockResolvedValue(
-        existingCategory,
-      );
+      mockPrismaService.category.findUnique.mockResolvedValue(existingCategory);
       mockPrismaService.category.update.mockResolvedValue(updatedCategory);
 
       const result = await service.update('cat-1', 'family-123', dto);
@@ -185,9 +180,7 @@ describe('CategoryService', () => {
         familyId: 'family-123',
       };
 
-      mockPrismaService.category.findUnique.mockResolvedValue(
-        existingCategory,
-      );
+      mockPrismaService.category.findUnique.mockResolvedValue(existingCategory);
       mockPrismaService.category.delete.mockResolvedValue(existingCategory);
 
       await service.remove('cat-1', 'family-123');
@@ -200,12 +193,12 @@ describe('CategoryService', () => {
     it('should throw NotFoundException when category not found', async () => {
       mockPrismaService.category.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.remove('nonexistent', 'family-123'),
-      ).rejects.toThrow(NotFoundException);
-      await expect(
-        service.remove('nonexistent', 'family-123'),
-      ).rejects.toThrow('Category not found');
+      await expect(service.remove('nonexistent', 'family-123')).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.remove('nonexistent', 'family-123')).rejects.toThrow(
+        'Category not found',
+      );
     });
 
     it('should throw NotFoundException when trying to remove a default category', async () => {
@@ -216,9 +209,9 @@ describe('CategoryService', () => {
         familyId: null,
       });
 
-      await expect(
-        service.remove('cat-1', 'family-123'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.remove('cat-1', 'family-123')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

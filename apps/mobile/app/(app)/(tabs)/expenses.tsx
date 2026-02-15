@@ -1,81 +1,18 @@
-import { useRef } from 'react';
-import { View, Text, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator, Alert } from 'react-native';
-import { Swipeable } from 'react-native-gesture-handler';
+import { useState, useMemo } from 'react';
+import { View, Text, SectionList, TouchableOpacity, RefreshControl, ActivityIndicator, ScrollView } from 'react-native';
 import { router } from 'expo-router';
 import { useFamilyStore } from '@/stores/familyStore';
 import { useInfiniteExpenses, useDeleteExpense } from '@/hooks/useExpenses';
-import { mediumHaptic } from '@/lib/haptics';
+import { useCategories } from '@/hooks/useCategories';
+import { ExpenseCard } from '@/components/ExpenseCard';
+import { EmptyState } from '@/components/EmptyState';
 import type { Expense } from '@/hooks/types';
-
-function renderRightActions() {
-  return (
-    <View className="bg-red-500 justify-center items-center px-6 mb-2 mx-4 rounded-r-lg">
-      <Text className="text-white font-semibold">Delete</Text>
-    </View>
-  );
-}
-
-function ExpenseCard({
-  expense,
-  onDelete,
-}: {
-  expense: Expense;
-  onDelete: (id: string) => void;
-}) {
-  const swipeableRef = useRef<Swipeable>(null);
-  const date = new Date(expense.date).toLocaleDateString('en-IN', {
-    day: 'numeric',
-    month: 'short',
-  });
-
-  const handleSwipeOpen = () => {
-    mediumHaptic();
-    Alert.alert(
-      'Delete Expense',
-      'Are you sure you want to delete this expense?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-          onPress: () => swipeableRef.current?.close(),
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => onDelete(expense.id),
-        },
-      ],
-    );
-  };
-
-  return (
-    <Swipeable
-      ref={swipeableRef}
-      renderRightActions={renderRightActions}
-      onSwipeableOpen={handleSwipeOpen}
-    >
-      <View className="bg-white border border-gray-100 rounded-lg p-4 mb-2 mx-4">
-        <View className="flex-row justify-between items-start">
-          <View className="flex-1 mr-3">
-            <Text className="font-medium text-base">{expense.description}</Text>
-            <Text className="text-gray-500 text-sm mt-1">
-              {expense.category?.name || 'Uncategorized'} • {date}
-            </Text>
-            <Text className="text-gray-400 text-xs mt-1">
-              by {expense.createdBy?.displayName || expense.createdBy?.name || 'Unknown'}
-            </Text>
-          </View>
-          <Text className="font-semibold text-base">
-            ₹{expense.amount.toLocaleString('en-IN')}
-          </Text>
-        </View>
-      </View>
-    </Swipeable>
-  );
-}
 
 export default function ExpensesScreen() {
   const activeFamilyId = useFamilyStore((s) => s.activeFamilyId);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const { data: categories } = useCategories(activeFamilyId);
+
   const {
     data,
     isPending,
@@ -83,10 +20,34 @@ export default function ExpensesScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteExpenses(activeFamilyId, { limit: 20, sort: 'date' });
+  } = useInfiniteExpenses(activeFamilyId, {
+    limit: 20,
+    sort: 'date',
+    ...(selectedCategoryId ? { categoryId: selectedCategoryId } : {}),
+  });
   const deleteExpense = useDeleteExpense(activeFamilyId!);
 
   const expenses = data?.pages.flatMap((p) => p.data) ?? [];
+
+  const sections = useMemo(() => {
+    const grouped = new Map<string, Expense[]>();
+    for (const expense of expenses) {
+      const dateKey = expense.date.split('T')[0]!;
+      const existing = grouped.get(dateKey);
+      if (existing) {
+        existing.push(expense);
+      } else {
+        grouped.set(dateKey, [expense]);
+      }
+    }
+    return Array.from(grouped.entries()).map(([dateKey, data]) => ({
+      title: new Date(dateKey + 'T00:00:00').toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+      }),
+      data,
+    }));
+  }, [expenses]);
 
   if (!activeFamilyId) {
     return (
@@ -96,17 +57,54 @@ export default function ExpensesScreen() {
     );
   }
 
+  const categoryFilterHeader = (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 8, gap: 8 }}
+    >
+      <TouchableOpacity
+        className={`px-4 py-2 rounded-full border ${
+          selectedCategoryId === null ? 'bg-black border-black' : 'bg-white border-gray-300'
+        }`}
+        onPress={() => setSelectedCategoryId(null)}
+      >
+        <Text className={`text-sm ${selectedCategoryId === null ? 'text-white' : 'text-gray-700'}`}>
+          All
+        </Text>
+      </TouchableOpacity>
+      {categories?.map((cat) => (
+        <TouchableOpacity
+          key={cat.id}
+          className={`px-4 py-2 rounded-full border ${
+            selectedCategoryId === cat.id ? 'bg-black border-black' : 'bg-white border-gray-300'
+          }`}
+          onPress={() => setSelectedCategoryId(cat.id)}
+        >
+          <Text className={`text-sm ${selectedCategoryId === cat.id ? 'text-white' : 'text-gray-700'}`}>
+            {cat.icon ? `${cat.icon} ` : ''}{cat.name}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+
   return (
     <View className="flex-1 bg-gray-50">
-      <FlatList
-        data={expenses}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => item.id}
+        renderSectionHeader={({ section: { title } }) => (
+          <Text className="text-sm font-semibold text-gray-500 px-4 pt-4 pb-1">{title}</Text>
+        )}
         renderItem={({ item }) => (
           <TouchableOpacity onPress={() => router.push(`/(app)/expense/${item.id}`)}>
             <ExpenseCard expense={item} onDelete={(id) => deleteExpense.mutate(id)} />
           </TouchableOpacity>
         )}
-        contentContainerStyle={{ paddingVertical: 12 }}
+        ListHeaderComponent={categoryFilterHeader}
+        stickySectionHeadersEnabled={false}
+        contentContainerStyle={{ paddingBottom: 12 }}
         refreshControl={
           <RefreshControl refreshing={isPending} onRefresh={refetch} />
         }
@@ -119,12 +117,7 @@ export default function ExpensesScreen() {
         }
         ListEmptyComponent={
           !isPending ? (
-            <View className="items-center justify-center py-20">
-              <Text className="text-gray-400 text-base">No expenses yet</Text>
-              <Text className="text-gray-400 text-sm mt-1">
-                Tap + to add your first expense
-              </Text>
-            </View>
+            <EmptyState title="No expenses yet" message="Tap + to add your first expense" />
           ) : null
         }
       />

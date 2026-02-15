@@ -13,7 +13,9 @@ import { useFamilyStore } from '@/stores/familyStore';
 import { useCreateExpense } from '@/hooks/useExpenses';
 import { useCreateRecurringExpense } from '@/hooks/useRecurringExpenses';
 import { useCategories } from '@/hooks/useCategories';
+import { CategoryPicker } from '@/components/CategoryPicker';
 import { successHaptic, errorHaptic } from '@/lib/haptics';
+import { formatINR, stripINRFormatting } from '@/lib/formatINR';
 
 const FREQUENCIES = ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'] as const;
 
@@ -32,7 +34,8 @@ export default function AddExpenseScreen() {
   const [endDate, setEndDate] = useState('');
 
   const handleSubmit = () => {
-    if (!amount || Number(amount) <= 0) {
+    const numericAmount = Number(stripINRFormatting(amount));
+    if (!amount || numericAmount <= 0) {
       Alert.alert('Error', 'Please enter a valid amount');
       return;
     }
@@ -48,7 +51,7 @@ export default function AddExpenseScreen() {
     if (isRecurring) {
       createRecurring.mutate(
         {
-          amount: Number(amount),
+          amount: numericAmount,
           description: description.trim(),
           frequency,
           startDate: date,
@@ -63,7 +66,7 @@ export default function AddExpenseScreen() {
     } else {
       createExpense.mutate(
         {
-          amount: Number(amount),
+          amount: numericAmount,
           description: description.trim(),
           date,
           categoryId,
@@ -85,7 +88,7 @@ export default function AddExpenseScreen() {
         className="border border-gray-300 rounded-lg px-4 py-3 mb-4 text-base"
         placeholder="0.00"
         value={amount}
-        onChangeText={setAmount}
+        onChangeText={(v) => setAmount(formatINR(v))}
         keyboardType="numeric"
       />
 
@@ -106,27 +109,7 @@ export default function AddExpenseScreen() {
       />
 
       <Text className="text-sm font-medium text-gray-700 mb-2">Category</Text>
-      <View className="flex-row flex-wrap gap-2 mb-6">
-        {categories?.map((cat) => (
-          <TouchableOpacity
-            key={cat.id}
-            className={`px-4 py-2 rounded-full border ${
-              categoryId === cat.id
-                ? 'bg-black border-black'
-                : 'bg-white border-gray-300'
-            }`}
-            onPress={() => setCategoryId(cat.id)}
-          >
-            <Text
-              className={`text-sm ${
-                categoryId === cat.id ? 'text-white' : 'text-gray-700'
-              }`}
-            >
-              {cat.icon ? `${cat.icon} ` : ''}{cat.name}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <CategoryPicker categories={categories} selectedId={categoryId} onSelect={setCategoryId} />
 
       {/* Recurring Toggle */}
       <View className="flex-row items-center justify-between mb-4">

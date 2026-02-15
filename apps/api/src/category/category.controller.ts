@@ -55,10 +55,7 @@ export class CategoryController {
   @Delete(':id')
   @UseGuards(FamilyGuard)
   @RequiredFamilyRole(FamilyRole.ADMIN)
-  async remove(
-    @Param('familyId') familyId: string,
-    @Param('id') id: string,
-  ) {
+  async remove(@Param('familyId') familyId: string, @Param('id') id: string) {
     return this.categoryService.remove(id, familyId);
   }
 }

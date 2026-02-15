@@ -11,7 +11,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useFamilyStore } from '@/stores/familyStore';
 import { useExpense, useUpdateExpense, useDeleteExpense } from '@/hooks/useExpenses';
 import { useCategories } from '@/hooks/useCategories';
+import { CategoryPicker } from '@/components/CategoryPicker';
+import { LoadingScreen } from '@/components/LoadingScreen';
 import { successHaptic } from '@/lib/haptics';
+import { formatINR, stripINRFormatting } from '@/lib/formatINR';
 
 export default function ExpenseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,7 +31,7 @@ export default function ExpenseDetailScreen() {
 
   const startEditing = () => {
     if (!expense) return;
-    setAmount(String(expense.amount));
+    setAmount(formatINR(String(expense.amount)));
     setDescription(expense.description);
     setCategoryId(expense.categoryId);
     setEditing(true);
@@ -39,7 +42,7 @@ export default function ExpenseDetailScreen() {
     updateExpense.mutate(
       {
         id,
-        amount: Number(amount),
+        amount: Number(stripINRFormatting(amount)),
         description: description.trim(),
         categoryId: categoryId ?? undefined,
       },
@@ -70,11 +73,7 @@ export default function ExpenseDetailScreen() {
   };
 
   if (isPending || !expense) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-gray-400">Loading...</Text>
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   if (editing) {
@@ -84,7 +83,7 @@ export default function ExpenseDetailScreen() {
         <TextInput
           className="border border-gray-300 rounded-lg px-4 py-3 mb-4 text-base"
           value={amount}
-          onChangeText={setAmount}
+          onChangeText={(v) => setAmount(formatINR(v))}
           keyboardType="numeric"
         />
 
@@ -96,21 +95,7 @@ export default function ExpenseDetailScreen() {
         />
 
         <Text className="text-sm font-medium text-gray-700 mb-2">Category</Text>
-        <View className="flex-row flex-wrap gap-2 mb-6">
-          {categories?.map((cat) => (
-            <TouchableOpacity
-              key={cat.id}
-              className={`px-4 py-2 rounded-full border ${
-                categoryId === cat.id ? 'bg-black border-black' : 'bg-white border-gray-300'
-              }`}
-              onPress={() => setCategoryId(cat.id)}
-            >
-              <Text className={`text-sm ${categoryId === cat.id ? 'text-white' : 'text-gray-700'}`}>
-                {cat.icon ? `${cat.icon} ` : ''}{cat.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <CategoryPicker categories={categories} selectedId={categoryId} onSelect={setCategoryId} />
 
         <View className="flex-row gap-3 mb-8">
           <TouchableOpacity

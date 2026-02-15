@@ -74,7 +74,7 @@ export class ReportController {
     return this.reportService.getTopExpenses(
       familyId,
       month,
-      Number(limit) || 10,
+      Number(limit) || 5,
     );
   }
 }

@@ -1,8 +1,18 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+
+const userSelect = {
+  id: true,
+  name: true,
+  email: true,
+  displayName: true,
+  avatarUrl: true,
+  createdAt: true,
+};
 
 describe('UserService', () => {
   let service: UserService;
@@ -55,6 +65,7 @@ describe('UserService', () => {
       expect(result).toEqual(mockUser);
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
         where: { id: 'user-123' },
+        select: userSelect,
       });
     });
 
@@ -96,6 +107,7 @@ describe('UserService', () => {
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 'user-123' },
         data: updateDto,
+        select: userSelect,
       });
     });
 
@@ -124,6 +136,7 @@ describe('UserService', () => {
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 'user-123' },
         data: updateDto,
+        select: userSelect,
       });
     });
 
@@ -153,6 +166,7 @@ describe('UserService', () => {
       expect(prisma.user.update).toHaveBeenCalledWith({
         where: { id: 'user-123' },
         data: updateDto,
+        select: userSelect,
       });
     });
   });

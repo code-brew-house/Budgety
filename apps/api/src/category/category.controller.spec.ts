@@ -109,11 +109,7 @@ describe('CategoryController', () => {
       const result = await controller.update('family-456', 'cat-2', dto);
 
       expect(result).toEqual(updatedCategory);
-      expect(service.update).toHaveBeenCalledWith(
-        'cat-2',
-        'family-456',
-        dto,
-      );
+      expect(service.update).toHaveBeenCalledWith('cat-2', 'family-456', dto);
     });
   });
 

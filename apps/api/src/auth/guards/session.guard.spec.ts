@@ -6,7 +6,7 @@ jest.mock('better-auth/adapters/prisma', () => ({
   prismaAdapter: jest.fn(),
 }));
 jest.mock('better-auth/node', () => ({
-  fromNodeHeaders: jest.fn((headers) => headers),
+  fromNodeHeaders: jest.fn((headers: Record<string, string>) => headers),
 }));
 jest.mock('../auth');
 
@@ -60,8 +60,11 @@ describe('SessionGuard', () => {
     const result = await guard.canActivate(context);
 
     expect(result).toBe(true);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const request = context.switchToHttp().getRequest();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(request['user']).toEqual(mockSession.user);
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     expect(request['session']).toEqual(mockSession.session);
   });
 

@@ -41,10 +41,7 @@ export class FamilyController {
   }
 
   @Post('join')
-  async join(
-    @CurrentUser() user: { id: string },
-    @Body() dto: JoinFamilyDto,
-  ) {
+  async join(@CurrentUser() user: { id: string }, @Body() dto: JoinFamilyDto) {
     return this.familyService.joinFamily(user.id, dto.code);
   }
 

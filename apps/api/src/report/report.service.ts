@@ -250,7 +250,11 @@ export class ReportService {
 
   async getMonthlyTrend(familyId: string, months: number) {
     const now = new Date();
-    const startDate = new Date(now.getFullYear(), now.getMonth() - months + 1, 1);
+    const startDate = new Date(
+      now.getFullYear(),
+      now.getMonth() - months + 1,
+      1,
+    );
 
     const expenses = await this.prisma.expense.findMany({
       where: {

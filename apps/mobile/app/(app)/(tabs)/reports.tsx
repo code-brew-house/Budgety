@@ -10,6 +10,8 @@ import {
   useMonthlyTrend,
   useTopExpenses,
 } from '@/hooks/useReports';
+import { BudgetUtilization } from '@/components/BudgetUtilization';
+import { EmptyState } from '@/components/EmptyState';
 import { CategoryDonut } from '@/components/charts/CategoryDonut';
 import { DailySpendingBar } from '@/components/charts/DailySpendingBar';
 import { MonthlyTrendLine } from '@/components/charts/MonthlyTrendLine';
@@ -206,33 +208,7 @@ export default function ReportsScreen() {
 
       {/* Category Budget Utilization */}
       {utilization && utilization.categories.length > 0 && (
-        <View className="mt-4 px-4">
-          <Text className="text-base font-semibold mb-2">Category Budget</Text>
-          {utilization.categories.map((cat) => {
-            const catColor = getColor(cat.utilizationPercent);
-            return (
-              <View key={cat.categoryId} className="bg-white border border-gray-100 rounded-lg p-4 mb-2">
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="font-medium">
-                    {cat.icon ? `${cat.icon} ` : ''}{cat.name}
-                  </Text>
-                  <Text className={`text-sm font-medium ${catColor.text}`}>
-                    {cat.utilizationPercent}%
-                  </Text>
-                </View>
-                <View className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <View
-                    className={`h-full rounded-full ${catColor.bar}`}
-                    style={{ width: `${Math.min(cat.utilizationPercent, 100)}%` }}
-                  />
-                </View>
-                <Text className="text-xs text-gray-500 mt-1">
-                  ₹{cat.spent.toLocaleString('en-IN')} / ₹{cat.budgeted.toLocaleString('en-IN')}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
+        <BudgetUtilization categories={utilization.categories} />
       )}
 
       {/* Top Expenses */}
@@ -261,9 +237,7 @@ export default function ReportsScreen() {
 
       {/* Empty state */}
       {spending && spending.members.length === 0 && (
-        <View className="items-center py-20">
-          <Text className="text-gray-400 text-base">No spending data for this month</Text>
-        </View>
+        <EmptyState title="No spending data for this month" />
       )}
     </ScrollView>
   );

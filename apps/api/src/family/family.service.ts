@@ -125,11 +125,7 @@ export class FamilyService {
     return { code: invite.code, expiresAt: invite.expiresAt };
   }
 
-  async updateMemberRole(
-    familyId: string,
-    memberId: string,
-    role: FamilyRole,
-  ) {
+  async updateMemberRole(familyId: string, memberId: string, role: FamilyRole) {
     const member = await this.prisma.familyMember.findUnique({
       where: { id: memberId },
     });

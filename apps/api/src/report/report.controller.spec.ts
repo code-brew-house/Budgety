@@ -172,7 +172,7 @@ describe('ReportController', () => {
       );
     });
 
-    it('should default to 10 when limit not provided', async () => {
+    it('should default to 5 when limit not provided', async () => {
       const mockResult = { month: '2026-02', expenses: [] };
       mockReportService.getTopExpenses.mockResolvedValue(mockResult);
 
@@ -181,7 +181,7 @@ describe('ReportController', () => {
       expect(service.getTopExpenses).toHaveBeenCalledWith(
         'family-123',
         '2026-02',
-        10,
+        5,
       );
     });
   });

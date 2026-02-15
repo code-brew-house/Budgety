@@ -73,11 +73,51 @@ export function useCreateExpense(familyId: string) {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-    onMutate: async () => {
+    onMutate: async (newExpense) => {
       await queryClient.cancelQueries({ queryKey: ['expenses-infinite', familyId] });
       await queryClient.cancelQueries({ queryKey: ['expenses', familyId] });
+
+      const previousData = queryClient.getQueriesData({ queryKey: ['expenses-infinite', familyId] });
+
+      const optimisticExpense: Expense = {
+        id: `optimistic-${Date.now()}`,
+        amount: newExpense.amount,
+        description: newExpense.description,
+        date: newExpense.date,
+        categoryId: newExpense.categoryId,
+        familyId,
+        createdById: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        category: { id: newExpense.categoryId, name: '', icon: null },
+        createdBy: { id: '', name: '', displayName: null, avatarUrl: null },
+      };
+
+      queryClient.setQueriesData(
+        { queryKey: ['expenses-infinite', familyId] },
+        (old: any) => {
+          if (!old?.pages?.length) return old;
+          const firstPage = old.pages[0];
+          return {
+            ...old,
+            pages: [
+              { ...firstPage, data: [optimisticExpense, ...firstPage.data], meta: { ...firstPage.meta, total: firstPage.meta.total + 1 } },
+              ...old.pages.slice(1),
+            ],
+          };
+        },
+      );
+
+      return { previousData };
     },
-    onSuccess: () => {
+    onError: (_err, _data, context) => {
+      if (context?.previousData) {
+        for (const [queryKey, data] of context.previousData) {
+          queryClient.setQueryData(queryKey, data);
+        }
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses-infinite', familyId] });
       queryClient.invalidateQueries({ queryKey: ['expenses', familyId] });
       queryClient.invalidateQueries({ queryKey: ['reports', familyId] });
@@ -93,7 +133,47 @@ export function useUpdateExpense(familyId: string) {
         method: 'PATCH',
         body: JSON.stringify(data),
       }),
-    onSuccess: () => {
+    onMutate: async (updated) => {
+      await queryClient.cancelQueries({ queryKey: ['expenses-infinite', familyId] });
+      await queryClient.cancelQueries({ queryKey: ['expenses', familyId, updated.id] });
+
+      const previousInfinite = queryClient.getQueriesData({ queryKey: ['expenses-infinite', familyId] });
+      const previousSingle = queryClient.getQueryData(['expenses', familyId, updated.id]);
+
+      queryClient.setQueriesData(
+        { queryKey: ['expenses-infinite', familyId] },
+        (old: any) => {
+          if (!old?.pages) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => ({
+              ...page,
+              data: page.data.map((e: Expense) =>
+                e.id === updated.id ? { ...e, ...updated } : e,
+              ),
+            })),
+          };
+        },
+      );
+
+      queryClient.setQueryData(['expenses', familyId, updated.id], (old: any) =>
+        old ? { ...old, ...updated } : old,
+      );
+
+      return { previousInfinite, previousSingle, updatedId: updated.id };
+    },
+    onError: (_err, _data, context) => {
+      if (context?.previousInfinite) {
+        for (const [queryKey, data] of context.previousInfinite) {
+          queryClient.setQueryData(queryKey, data);
+        }
+      }
+      if (context?.previousSingle !== undefined) {
+        queryClient.setQueryData(['expenses', familyId, context.updatedId], context.previousSingle);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses-infinite', familyId] });
       queryClient.invalidateQueries({ queryKey: ['expenses', familyId] });
       queryClient.invalidateQueries({ queryKey: ['reports', familyId] });
     },

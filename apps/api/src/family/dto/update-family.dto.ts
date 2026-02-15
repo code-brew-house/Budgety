@@ -13,12 +13,16 @@ export class UpdateFamilyDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
-  @Transform(({ value }) => (value != null ? Math.trunc(value * 100) / 100 : value))
+  @Transform(({ value }) =>
+    value != null ? Math.trunc(value * 100) / 100 : value,
+  )
   monthlyBudget?: number;
 
   @IsOptional()
   @IsNumber()
   @Min(0)
-  @Transform(({ value }) => (value != null ? Math.trunc(value * 100) / 100 : value))
+  @Transform(({ value }) =>
+    value != null ? Math.trunc(value * 100) / 100 : value,
+  )
   largeExpenseThreshold?: number;
 }

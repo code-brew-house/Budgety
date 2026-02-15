@@ -58,3 +58,6 @@ pnpm android              # Android emulator
 - Both apps extend shared tsconfig via `@budgety/typescript-config`
 - API unit tests use `*.spec.ts` in `src/`, e2e tests use `*.e2e-spec.ts` in `test/`
 - NestJS schematics available via `@nestjs/cli` for generating modules/controllers/services
+
+## Misc
+- When writing commits do not add "Created by Claude Code"

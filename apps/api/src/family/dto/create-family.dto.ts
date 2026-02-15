@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsOptional, IsString, IsNumber, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsNumber,
+  Min,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateFamilyDto {
@@ -13,6 +19,8 @@ export class CreateFamilyDto {
   @IsOptional()
   @IsNumber()
   @Min(0)
-  @Transform(({ value }) => (value != null ? Math.trunc(value * 100) / 100 : value))
+  @Transform(({ value }) =>
+    value != null ? Math.trunc(value * 100) / 100 : value,
+  )
   monthlyBudget?: number;
 }

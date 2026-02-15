@@ -19,10 +19,7 @@ export class CategoryService {
   async findAll(familyId: string) {
     return this.prisma.category.findMany({
       where: {
-        OR: [
-          { isDefault: true, familyId: null },
-          { familyId },
-        ],
+        OR: [{ isDefault: true, familyId: null }, { familyId }],
       },
       select: categorySelect,
       orderBy: { name: 'asc' },

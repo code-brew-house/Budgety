@@ -262,9 +262,7 @@ describe('FamilyService', () => {
       const result = await service.createInvite('family-123', 'user-123');
 
       expect(result.code).toHaveLength(6);
-      expect(result.expiresAt).toEqual(
-        new Date(now + 24 * 60 * 60 * 1000),
-      );
+      expect(result.expiresAt).toEqual(new Date(now + 24 * 60 * 60 * 1000));
       expect(prisma.invite.create).toHaveBeenCalledWith({
         data: expect.objectContaining({
           familyId: 'family-123',
@@ -448,12 +446,12 @@ describe('FamilyService', () => {
         return cb(tx);
       });
 
-      await expect(
-        service.joinFamily('user-456', 'BADCOD'),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.joinFamily('user-456', 'BADCOD'),
-      ).rejects.toThrow('Invalid or expired invite code');
+      await expect(service.joinFamily('user-456', 'BADCOD')).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.joinFamily('user-456', 'BADCOD')).rejects.toThrow(
+        'Invalid or expired invite code',
+      );
     });
 
     it('should throw if already a member', async () => {
@@ -477,12 +475,12 @@ describe('FamilyService', () => {
         return cb(tx);
       });
 
-      await expect(
-        service.joinFamily('user-456', 'AB12CD'),
-      ).rejects.toThrow(BadRequestException);
-      await expect(
-        service.joinFamily('user-456', 'AB12CD'),
-      ).rejects.toThrow('Already a member of this family');
+      await expect(service.joinFamily('user-456', 'AB12CD')).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.joinFamily('user-456', 'AB12CD')).rejects.toThrow(
+        'Already a member of this family',
+      );
     });
   });
 });

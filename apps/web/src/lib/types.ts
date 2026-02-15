@@ -50,12 +50,9 @@ export interface Expense {
 
 export interface PaginatedExpenses {
   data: Expense[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export interface CategoryBudget {

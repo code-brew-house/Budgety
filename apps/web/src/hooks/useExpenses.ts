@@ -50,7 +50,8 @@ export function useInfiniteExpenses(familyId: string | null, filters: Omit<Expen
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
       const totalFetched = allPages.reduce((sum, p) => sum + p.data.length, 0);
-      return totalFetched < lastPage.meta.total ? allPages.length + 1 : undefined;
+      const total = lastPage.total ?? 0;
+      return totalFetched < total ? allPages.length + 1 : undefined;
     },
     enabled: !!familyId,
   });

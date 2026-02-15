@@ -134,6 +134,21 @@ model Family {
   expenses          Expense[]
   recurringExpenses RecurringExpense[]
   categoryBudgets   CategoryBudget[]
+  invites           Invite[]
+}
+
+model Invite {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  familyId  String
+  family    Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  createdBy String
+  usedBy    String?
+  usedAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([code])
 }
 
 model FamilyMember {
@@ -229,6 +244,13 @@ model RecurringExpense {
 
 Stored with `isDefault: true` and `familyId: null`. Queries return defaults + family-specific custom categories.
 
+### Money Fields
+
+All `Float` money fields (`amount`, `monthlyBudget`, `CategoryBudget.amount`) are truncated to **2 decimal places** at the API layer before saving. Truncation uses `Math.trunc(value * 100) / 100` (not rounding — ₹99.999 becomes ₹99.99, not ₹100.00). Applied in two places:
+
+1. **DTOs** — `@Transform(({ value }) => Math.trunc(value * 100) / 100)` via `class-transformer`
+2. **Service layer** — Safety-net truncation before any Prisma `create`/`update` call
+
 ---
 
 ## 3. API Architecture
@@ -269,7 +291,8 @@ AppModule
 | | GET | `/families/:id` | MEMBER+ |
 | | PATCH | `/families/:id` | ADMIN |
 | | DELETE | `/families/:id` | ADMIN |
-| | POST | `/families/:id/members` | ADMIN |
+| | POST | `/families/:id/invites` | ADMIN |
+| | POST | `/families/join` | Auth |
 | | PATCH | `/families/:id/members/:memberId` | ADMIN |
 | | DELETE | `/families/:id/members/:memberId` | ADMIN |
 | **Category** | GET | `/families/:fid/categories` | MEMBER+ |
@@ -298,6 +321,13 @@ AppModule
 ### FamilyGuard Pattern
 
 Applied via `@UseGuards(FamilyGuard)` + `@RequiredFamilyRole(FamilyRole.MEMBER)`. Reads `:familyId` from route params, queries `FamilyMember` for current user, verifies role.
+
+### Invite Flow
+
+1. Admin calls `POST /families/:id/invites` → generates 6-character alphanumeric code (e.g., `X7K9M2`), expires in 24 hours
+2. Admin shares code via WhatsApp/text
+3. Other user calls `POST /families/join` with `{ code }` → validates code is unused and not expired, creates `FamilyMember` with `MEMBER` role, marks invite as used (`usedBy`, `usedAt`)
+4. One-time use: once used, the code is dead
 
 ### API File Structure
 
@@ -396,16 +426,17 @@ Mobile uses `@better-auth/react` → `createAuthClient({ baseURL })`. Root layou
 
 ## 5. Phase 1: Foundation
 
-**Goal:** PostgreSQL running, Prisma migrated, BetterAuth working (signup/login/session), Swagger docs live, mobile has Expo Router with auth screens.
+**Goal:** PostgreSQL running, Prisma migrated, BetterAuth working (signup/login/session), Swagger docs live, input validation enabled, mobile has Expo Router with auth screens.
 
 ### Backend
-1. **Docker Compose** — `docker-compose.yml` at repo root (PostgreSQL 16)
+1. **Docker Compose** — `docker-compose.yml` at repo root (PostgreSQL 16, local dev only)
 2. **Prisma** — Install `prisma` + `@prisma/client`, create full schema, seed default categories, run initial migration
 3. **PrismaModule** — Global module with `PrismaService` extending `PrismaClient`
-4. **ConfigModule** — `@nestjs/config`, `.env` + `.env.example` (DATABASE_URL, BETTER_AUTH_SECRET, PORT)
-5. **BetterAuth** — Install `better-auth`, create `auth.ts` instance, mount handler in `main.ts` before body parser
-6. **Swagger** — Install `@nestjs/swagger`, setup in `main.ts`
-7. **UserModule** — `GET /users/me`, `PATCH /users/me`
+4. **ConfigModule** — `@nestjs/config`, `.env` + `.env.example` (DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, PORT)
+5. **Validation** — Install `class-validator` + `class-transformer`, global `ValidationPipe` in `main.ts` with `whitelist: true` and `transform: true`
+6. **BetterAuth** — Install `better-auth`, create `auth.ts` instance, mount handler in `main.ts` before body parser
+7. **Swagger** — Install `@nestjs/swagger`, setup in `main.ts`
+8. **UserModule** — `GET /users/me`, `PATCH /users/me`
 
 ### Mobile
 1. **Expo Router** — Delete `App.js`/`index.js`, set entry to `expo-router/entry`, create `app/` structure
@@ -484,10 +515,9 @@ Mobile uses `@better-auth/react` → `createAuthClient({ baseURL })`. Root layou
 6. **UX** — Haptic feedback, INR input formatting, swipe-to-delete, confirmation dialogs
 
 ### Backend
-1. **Validation** — Global `ValidationPipe` with `class-validator`/`class-transformer`
-2. **Rate limiting** — `@nestjs/throttler`
-3. **CORS** — Configure for mobile origins
-4. **Consistent error format** — Exception filters
+1. **Rate limiting** — `@nestjs/throttler`
+2. **CORS** — Configure for mobile origins
+3. **Consistent error format** — Exception filters
 
 ### Verify
 - Optimistic add → instant, syncs after
@@ -495,3 +525,33 @@ Mobile uses `@better-auth/react` → `createAuthClient({ baseURL })`. Root layou
 - Empty states on all screens
 - Session expiry → login redirect
 - Family switch → all data updates
+
+---
+
+## 9. Deployment (Dokploy + Nixpacks)
+
+The API is deployed on **Dokploy** using **Nixpacks** (no Dockerfile needed). PostgreSQL is an existing instance on Dokploy. Docker Compose (`docker-compose.yml`) is for **local development only**.
+
+### Build & Start Commands
+
+| Setting | Value |
+|---------|-------|
+| Build Command | `pnpm install --frozen-lockfile && cd apps/api && npx prisma generate && cd ../.. && pnpm --filter api build` |
+| Start Command | `cd apps/api && npx prisma migrate deploy && node dist/main.js` |
+
+The start command runs `prisma migrate deploy` on every deploy — applies pending migrations to production before the server starts.
+
+### Environment Variables
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DATABASE_URL` | Dokploy Postgres connection string | `postgresql://user:pass@host:5432/budgety` |
+| `BETTER_AUTH_SECRET` | Secret key for session signing (min 32 chars) | Random string |
+| `BETTER_AUTH_URL` | Public URL of the deployed API | `https://api.budgety.example.com` |
+| `PORT` | Server port | `3000` |
+| `NODE_ENV` | Environment | `production` |
+
+### Notes
+- Nixpacks auto-detects pnpm from `pnpm-lock.yaml`
+- `DATABASE_URL` points to the existing Dokploy Postgres instance (not Docker Compose)
+- Docker Compose remains for local development only
