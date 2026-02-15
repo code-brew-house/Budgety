@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // URL configured in prisma.config.ts (Prisma 7 pattern)
+  url      = env("DATABASE_URL")
 }
 
 // ─── BetterAuth-managed tables ───────────────────────────────────
