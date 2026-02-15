@@ -39,16 +39,19 @@ export default function ExpensesPage() {
   const { data: categories } = useCategories(activeFamilyId);
 
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
+  const [dateRange, setDateRange] = useState<[string | null, string | null]>([null, null]);
   const [sort, setSort] = useState<string>('createdAt');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  const startDate = dateRange[0] ?? undefined;
+  const endDate = dateRange[1] ?? undefined;
 
   const filters = {
     limit: 20,
     sort: sort as 'date' | 'createdAt',
     ...(categoryFilter ? { categoryId: categoryFilter } : {}),
-    ...(dateRange[0] ? { startDate: dateRange[0].toISOString().split('T')[0] } : {}),
-    ...(dateRange[1] ? { endDate: dateRange[1].toISOString().split('T')[0] } : {}),
+    ...(startDate ? { startDate } : {}),
+    ...(endDate ? { endDate } : {}),
   };
 
   const {

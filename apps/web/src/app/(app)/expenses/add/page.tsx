@@ -165,7 +165,7 @@ export default function AddExpensePage() {
                 label="End date (optional)"
                 placeholder="No end date"
                 value={endDate}
-                onChange={setEndDate}
+                onChange={(v) => setEndDate(v as Date | null)}
                 clearable
                 minDate={form.values.date}
               />
