@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Title,
   Text,
@@ -16,7 +15,6 @@ import { IconAlertCircle } from '@tabler/icons-react';
 import { authClient } from '@/lib/auth';
 
 export default function LoginPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +38,7 @@ export default function LoginPage() {
         setError(authError.message || 'Login failed');
         return;
       }
-      router.replace('/');
+      window.location.href = '/';
     } catch (e: any) {
       setError(e.message || 'Something went wrong');
     } finally {

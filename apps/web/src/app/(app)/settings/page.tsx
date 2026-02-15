@@ -10,7 +10,6 @@ import {
   IconLogout,
 } from '@tabler/icons-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { signOut } from '@/lib/auth';
 
 const links = [
@@ -22,11 +21,9 @@ const links = [
 ];
 
 export default function SettingsPage() {
-  const router = useRouter();
-
   const handleLogout = async () => {
     await signOut();
-    router.replace('/login');
+    window.location.href = '/login';
   };
 
   return (
