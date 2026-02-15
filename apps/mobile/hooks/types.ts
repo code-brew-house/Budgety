@@ -104,6 +104,37 @@ export interface BudgetUtilization {
   }[];
 }
 
+export interface CategorySplit {
+  month: string;
+  categories: {
+    categoryId: string;
+    name: string;
+    icon: string | null;
+    amount: number;
+    percent: number;
+  }[];
+}
+
+export interface DailySpending {
+  month: string;
+  days: {
+    date: string;
+    amount: number;
+  }[];
+}
+
+export interface MonthlyTrend {
+  months: {
+    month: string;
+    amount: number;
+  }[];
+}
+
+export interface TopExpenses {
+  month: string;
+  expenses: Expense[];
+}
+
 export interface Invite {
   code: string;
   expiresAt: string;
