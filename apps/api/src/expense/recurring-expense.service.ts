@@ -126,12 +126,7 @@ export class RecurringExpenseService {
     });
   }
 
-  async remove(
-    id: string,
-    familyId: string,
-    userId: string,
-    userRole: string,
-  ) {
+  async remove(id: string, familyId: string, userId: string, userRole: string) {
     const recurringExpense = await this.prisma.recurringExpense.findUnique({
       where: { id },
       select: recurringExpenseSelect,
@@ -162,9 +157,7 @@ export class RecurringExpenseService {
       },
     });
 
-    this.logger.log(
-      `Processing ${dueExpenses.length} recurring expense(s)...`,
-    );
+    this.logger.log(`Processing ${dueExpenses.length} recurring expense(s)...`);
 
     for (const re of dueExpenses) {
       try {
@@ -191,7 +184,7 @@ export class RecurringExpenseService {
         );
       } catch (error) {
         this.logger.error(
-          `Failed to process recurring expense ${re.id}: ${error}`,
+          `Failed to process recurring expense ${re.id}: ${String(error)}`,
         );
       }
     }
