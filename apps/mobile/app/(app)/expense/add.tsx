@@ -6,21 +6,29 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  Switch,
 } from 'react-native';
 import { router } from 'expo-router';
 import { useFamilyStore } from '@/stores/familyStore';
 import { useCreateExpense } from '@/hooks/useExpenses';
+import { useCreateRecurringExpense } from '@/hooks/useRecurringExpenses';
 import { useCategories } from '@/hooks/useCategories';
+
+const FREQUENCIES = ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'] as const;
 
 export default function AddExpenseScreen() {
   const activeFamilyId = useFamilyStore((s) => s.activeFamilyId);
   const createExpense = useCreateExpense(activeFamilyId!);
+  const createRecurring = useCreateRecurringExpense(activeFamilyId!);
   const { data: categories } = useCategories(activeFamilyId);
 
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]!);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [frequency, setFrequency] = useState<typeof FREQUENCIES[number]>('MONTHLY');
+  const [endDate, setEndDate] = useState('');
 
   const handleSubmit = () => {
     if (!amount || Number(amount) <= 0) {
@@ -36,18 +44,35 @@ export default function AddExpenseScreen() {
       return;
     }
 
-    createExpense.mutate(
-      {
-        amount: Number(amount),
-        description: description.trim(),
-        date,
-        categoryId,
-      },
-      {
-        onSuccess: () => router.back(),
-        onError: (error) => Alert.alert('Error', error.message),
-      },
-    );
+    if (isRecurring) {
+      createRecurring.mutate(
+        {
+          amount: Number(amount),
+          description: description.trim(),
+          frequency,
+          startDate: date,
+          ...(endDate ? { endDate } : {}),
+          categoryId,
+        },
+        {
+          onSuccess: () => router.back(),
+          onError: (error) => Alert.alert('Error', error.message),
+        },
+      );
+    } else {
+      createExpense.mutate(
+        {
+          amount: Number(amount),
+          description: description.trim(),
+          date,
+          categoryId,
+        },
+        {
+          onSuccess: () => router.back(),
+          onError: (error) => Alert.alert('Error', error.message),
+        },
+      );
+    }
   };
 
   return (
@@ -102,13 +127,48 @@ export default function AddExpenseScreen() {
         ))}
       </View>
 
+      {/* Recurring Toggle */}
+      <View className="flex-row items-center justify-between mb-4">
+        <Text className="text-sm font-medium text-gray-700">Make this recurring</Text>
+        <Switch value={isRecurring} onValueChange={setIsRecurring} />
+      </View>
+
+      {isRecurring && (
+        <View className="mb-6">
+          <Text className="text-sm font-medium text-gray-700 mb-2">Frequency</Text>
+          <View className="flex-row flex-wrap gap-2 mb-4">
+            {FREQUENCIES.map((f) => (
+              <TouchableOpacity
+                key={f}
+                className={`px-4 py-2 rounded-full border ${
+                  frequency === f ? 'bg-black border-black' : 'bg-white border-gray-300'
+                }`}
+                onPress={() => setFrequency(f)}
+              >
+                <Text className={`text-sm ${frequency === f ? 'text-white' : 'text-gray-700'}`}>
+                  {f.charAt(0) + f.slice(1).toLowerCase()}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <Text className="text-sm font-medium text-gray-700 mb-1">End Date (optional)</Text>
+          <TextInput
+            className="border border-gray-300 rounded-lg px-4 py-3 text-base"
+            placeholder="YYYY-MM-DD"
+            value={endDate}
+            onChangeText={setEndDate}
+          />
+        </View>
+      )}
+
       <TouchableOpacity
         className="bg-black rounded-lg py-4 items-center mb-8"
         onPress={handleSubmit}
-        disabled={createExpense.isPending}
+        disabled={createExpense.isPending || createRecurring.isPending}
       >
         <Text className="text-white font-semibold text-base">
-          {createExpense.isPending ? 'Saving...' : 'Add Expense'}
+          {(createExpense.isPending || createRecurring.isPending) ? 'Saving...' : isRecurring ? 'Add Recurring Expense' : 'Add Expense'}
         </Text>
       </TouchableOpacity>
     </ScrollView>

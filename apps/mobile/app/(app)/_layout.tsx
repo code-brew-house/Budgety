@@ -55,6 +55,10 @@ export default function AppLayout() {
         name="budget/manage"
         options={{ headerShown: true, title: 'Budget', presentation: 'modal' }}
       />
+      <Stack.Screen
+        name="recurring-expenses/index"
+        options={{ headerShown: true, title: 'Recurring Expenses', presentation: 'modal' }}
+      />
     </Stack>
   );
 }

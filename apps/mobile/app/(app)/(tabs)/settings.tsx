@@ -68,6 +68,15 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       )}
 
+      {activeFamilyId && (
+        <TouchableOpacity
+          className="border border-gray-300 rounded-lg py-3 items-center mb-3"
+          onPress={() => router.push('/(app)/recurring-expenses')}
+        >
+          <Text className="font-medium text-sm">Recurring Expenses</Text>
+        </TouchableOpacity>
+      )}
+
       <View className="flex-row gap-3 mt-3 mb-6">
         <TouchableOpacity
           className="flex-1 bg-black rounded-lg py-3 items-center"
