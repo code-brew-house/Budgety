@@ -27,6 +27,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@budgety/typescript-config": "workspace:*",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

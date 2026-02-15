@@ -2,5 +2,5 @@
   "name": "@budgety/typescript-config",
   "version": "0.0.0",
   "private": true,
-  "files": ["base.json", "expo.json", "nestjs.json"]
+  "files": ["base.json", "expo.json", "nestjs.json", "nextjs.json"]
 }
