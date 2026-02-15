@@ -30,7 +30,7 @@ export default function AddExpensePage() {
 
   const [isRecurring, setIsRecurring] = useState(false);
   const [frequency, setFrequency] = useState('MONTHLY');
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<string | Date | null>(null);
 
   const form = useForm({
     initialValues: {
@@ -68,7 +68,7 @@ export default function AddExpensePage() {
           categoryId: values.categoryId,
           frequency,
           startDate: dateStr,
-          ...(endDate ? { endDate: endDate.toISOString().split('T')[0] } : {}),
+          ...(endDate ? { endDate: endDate instanceof Date ? endDate.toISOString().split('T')[0]! : String(endDate) } : {}),
         },
         {
           onSuccess: () => {
@@ -165,7 +165,7 @@ export default function AddExpensePage() {
                 label="End date (optional)"
                 placeholder="No end date"
                 value={endDate}
-                onChange={(v) => setEndDate(v as Date | null)}
+                onChange={(v) => setEndDate(v)}
                 clearable
                 minDate={form.values.date}
               />
