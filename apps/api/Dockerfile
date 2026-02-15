@@ -27,5 +27,8 @@ COPY --from=base /app/node_modules node_modules
 COPY --from=base /app/apps/api/package.json apps/api/
 COPY --from=base /app/package.json ./
 
+COPY --from=base /app/apps/api/entrypoint.sh apps/api/entrypoint.sh
+RUN chmod +x apps/api/entrypoint.sh
+
 EXPOSE 3000
-CMD ["node", "apps/api/dist/src/main.js"]
+CMD ["apps/api/entrypoint.sh"]
