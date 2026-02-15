@@ -4,6 +4,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { router } from 'expo-router';
 import { useFamilyStore } from '@/stores/familyStore';
 import { useInfiniteExpenses, useDeleteExpense } from '@/hooks/useExpenses';
+import { mediumHaptic } from '@/lib/haptics';
 import type { Expense } from '@/hooks/types';
 
 function renderRightActions() {
@@ -28,6 +29,7 @@ function ExpenseCard({
   });
 
   const handleSwipeOpen = () => {
+    mediumHaptic();
     Alert.alert(
       'Delete Expense',
       'Are you sure you want to delete this expense?',

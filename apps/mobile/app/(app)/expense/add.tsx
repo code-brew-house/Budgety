@@ -13,6 +13,7 @@ import { useFamilyStore } from '@/stores/familyStore';
 import { useCreateExpense } from '@/hooks/useExpenses';
 import { useCreateRecurringExpense } from '@/hooks/useRecurringExpenses';
 import { useCategories } from '@/hooks/useCategories';
+import { successHaptic, errorHaptic } from '@/lib/haptics';
 
 const FREQUENCIES = ['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY'] as const;
 
@@ -55,8 +56,8 @@ export default function AddExpenseScreen() {
           categoryId,
         },
         {
-          onSuccess: () => router.back(),
-          onError: (error) => Alert.alert('Error', error.message),
+          onSuccess: () => { successHaptic(); router.back(); },
+          onError: (error) => { errorHaptic(); Alert.alert('Error', error.message); },
         },
       );
     } else {
@@ -68,8 +69,8 @@ export default function AddExpenseScreen() {
           categoryId,
         },
         {
-          onSuccess: () => router.back(),
-          onError: (error) => Alert.alert('Error', error.message),
+          onSuccess: () => { successHaptic(); router.back(); },
+          onError: (error) => { errorHaptic(); Alert.alert('Error', error.message); },
         },
       );
     }
