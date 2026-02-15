@@ -1,6 +1,6 @@
-import { View, Text, FlatList, RefreshControl } from 'react-native';
+import { View, Text, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
 import { useFamilyStore } from '@/stores/familyStore';
-import { useExpenses } from '@/hooks/useExpenses';
+import { useInfiniteExpenses } from '@/hooks/useExpenses';
 import { useFamilyDetail } from '@/hooks/useFamilies';
 import { useMemberSpending } from '@/hooks/useReports';
 import type { Expense } from '@/hooks/types';
@@ -103,8 +103,15 @@ export default function HomeScreen() {
   const month = getCurrentMonth();
   const { data: family } = useFamilyDetail(activeFamilyId);
   const { data: spending } = useMemberSpending(activeFamilyId, month);
-  const { data: expenseData, isPending, refetch } = useExpenses(activeFamilyId, {
-    limit: 30,
+  const {
+    data: expenseData,
+    isPending,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteExpenses(activeFamilyId, {
+    limit: 20,
     sort: 'createdAt',
   });
 
@@ -121,10 +128,12 @@ export default function HomeScreen() {
 
   const hasBudget = (family?.monthlyBudget ?? 0) > 0;
 
+  const expenses = expenseData?.pages.flatMap((p) => p.data) ?? [];
+
   return (
     <View className="flex-1 bg-gray-50">
       <FlatList
-        data={expenseData?.data || []}
+        data={expenses}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <FeedItem
@@ -145,6 +154,13 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingBottom: 20, paddingTop: 4 }}
         refreshControl={
           <RefreshControl refreshing={isPending} onRefresh={refetch} />
+        }
+        onEndReached={() => { if (hasNextPage) fetchNextPage(); }}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <ActivityIndicator size="small" style={{ paddingVertical: 16 }} />
+          ) : null
         }
         ListEmptyComponent={
           !isPending ? (

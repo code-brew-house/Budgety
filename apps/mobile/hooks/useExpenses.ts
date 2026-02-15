@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api';
 import type { Expense, PaginatedExpenses } from './types';
 
@@ -27,6 +27,32 @@ export function useExpenses(familyId: string | null, filters: ExpenseFilters = {
   return useQuery({
     queryKey: ['expenses', familyId, filters],
     queryFn: () => apiFetch<PaginatedExpenses>(`/families/${familyId}/expenses${query ? `?${query}` : ''}`),
+    enabled: !!familyId,
+  });
+}
+
+export function useInfiniteExpenses(familyId: string | null, filters: Omit<ExpenseFilters, 'page'> = {}) {
+  const buildParams = (page: number) => {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    if (filters.limit) params.set('limit', String(filters.limit));
+    if (filters.startDate) params.set('startDate', filters.startDate);
+    if (filters.endDate) params.set('endDate', filters.endDate);
+    if (filters.categoryId) params.set('categoryId', filters.categoryId);
+    if (filters.createdById) params.set('createdById', filters.createdById);
+    if (filters.sort) params.set('sort', filters.sort);
+    return params.toString();
+  };
+
+  return useInfiniteQuery({
+    queryKey: ['expenses-infinite', familyId, filters],
+    queryFn: ({ pageParam = 1 }) =>
+      apiFetch<PaginatedExpenses>(`/families/${familyId}/expenses?${buildParams(pageParam)}`),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const totalFetched = allPages.reduce((sum, p) => sum + p.data.length, 0);
+      return totalFetched < lastPage.meta.total ? allPages.length + 1 : undefined;
+    },
     enabled: !!familyId,
   });
 }

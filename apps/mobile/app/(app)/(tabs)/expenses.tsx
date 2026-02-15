@@ -1,7 +1,7 @@
-import { View, Text, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { router } from 'expo-router';
 import { useFamilyStore } from '@/stores/familyStore';
-import { useExpenses } from '@/hooks/useExpenses';
+import { useInfiniteExpenses } from '@/hooks/useExpenses';
 import type { Expense } from '@/hooks/types';
 
 function ExpenseCard({ expense }: { expense: Expense }) {
@@ -32,7 +32,16 @@ function ExpenseCard({ expense }: { expense: Expense }) {
 
 export default function ExpensesScreen() {
   const activeFamilyId = useFamilyStore((s) => s.activeFamilyId);
-  const { data, isPending, refetch } = useExpenses(activeFamilyId, { limit: 50, sort: 'date' });
+  const {
+    data,
+    isPending,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteExpenses(activeFamilyId, { limit: 20, sort: 'date' });
+
+  const expenses = data?.pages.flatMap((p) => p.data) ?? [];
 
   if (!activeFamilyId) {
     return (
@@ -45,12 +54,19 @@ export default function ExpensesScreen() {
   return (
     <View className="flex-1 bg-gray-50">
       <FlatList
-        data={data?.data || []}
+        data={expenses}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <ExpenseCard expense={item} />}
         contentContainerStyle={{ paddingVertical: 12 }}
         refreshControl={
           <RefreshControl refreshing={isPending} onRefresh={refetch} />
+        }
+        onEndReached={() => { if (hasNextPage) fetchNextPage(); }}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <ActivityIndicator size="small" style={{ paddingVertical: 16 }} />
+          ) : null
         }
         ListEmptyComponent={
           !isPending ? (
