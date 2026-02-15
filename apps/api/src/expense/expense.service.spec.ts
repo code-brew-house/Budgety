@@ -1,9 +1,6 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ExpenseService } from './expense.service';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -71,7 +68,12 @@ describe('ExpenseService', () => {
         categoryId: 'cat-1',
         category: { id: 'cat-1', name: 'Food', icon: null },
         createdById: 'user-1',
-        createdBy: { id: 'user-1', name: 'John', displayName: null, avatarUrl: null },
+        createdBy: {
+          id: 'user-1',
+          name: 'John',
+          displayName: null,
+          avatarUrl: null,
+        },
         familyId: 'family-1',
       };
 
@@ -111,7 +113,12 @@ describe('ExpenseService', () => {
         categoryId: 'cat-1',
         category: { id: 'cat-1', name: 'Food', icon: null },
         createdById: 'user-1',
-        createdBy: { id: 'user-1', name: 'John', displayName: null, avatarUrl: null },
+        createdBy: {
+          id: 'user-1',
+          name: 'John',
+          displayName: null,
+          avatarUrl: null,
+        },
         familyId: 'family-1',
       },
     ];
@@ -201,7 +208,12 @@ describe('ExpenseService', () => {
         categoryId: 'cat-1',
         category: { id: 'cat-1', name: 'Food', icon: null },
         createdById: 'user-1',
-        createdBy: { id: 'user-1', name: 'John', displayName: null, avatarUrl: null },
+        createdBy: {
+          id: 'user-1',
+          name: 'John',
+          displayName: null,
+          avatarUrl: null,
+        },
         familyId: 'family-1',
       };
 
@@ -219,12 +231,12 @@ describe('ExpenseService', () => {
     it('should throw NotFoundException when expense not found', async () => {
       mockPrismaService.expense.findUnique.mockResolvedValue(null);
 
-      await expect(
-        service.findOne('nonexistent', 'family-1'),
-      ).rejects.toThrow(NotFoundException);
-      await expect(
-        service.findOne('nonexistent', 'family-1'),
-      ).rejects.toThrow('Expense not found');
+      await expect(service.findOne('nonexistent', 'family-1')).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.findOne('nonexistent', 'family-1')).rejects.toThrow(
+        'Expense not found',
+      );
     });
   });
 
@@ -239,7 +251,12 @@ describe('ExpenseService', () => {
       categoryId: 'cat-1',
       category: { id: 'cat-1', name: 'Food', icon: null },
       createdById: 'user-1',
-      createdBy: { id: 'user-1', name: 'John', displayName: null, avatarUrl: null },
+      createdBy: {
+        id: 'user-1',
+        name: 'John',
+        displayName: null,
+        avatarUrl: null,
+      },
       familyId: 'family-1',
     };
 
@@ -319,7 +336,12 @@ describe('ExpenseService', () => {
       categoryId: 'cat-1',
       category: { id: 'cat-1', name: 'Food', icon: null },
       createdById: 'user-1',
-      createdBy: { id: 'user-1', name: 'John', displayName: null, avatarUrl: null },
+      createdBy: {
+        id: 'user-1',
+        name: 'John',
+        displayName: null,
+        avatarUrl: null,
+      },
       familyId: 'family-1',
     };
 

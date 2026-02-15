@@ -11,22 +11,23 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FamilyRole } from '@prisma/client';
-import { ExpenseService } from './expense.service';
-import { CreateExpenseDto } from './dto/create-expense.dto';
-import { UpdateExpenseDto } from './dto/update-expense.dto';
-import { QueryExpensesDto } from './dto/query-expenses.dto';
+import { RecurringExpenseService } from './recurring-expense.service';
+import { CreateRecurringExpenseDto } from './dto/create-recurring-expense.dto';
+import { UpdateRecurringExpenseDto } from './dto/update-recurring-expense.dto';
 import { SessionGuard } from '../auth/guards/session.guard';
 import { FamilyGuard } from '../family/guards/family.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequiredFamilyRole } from '../family/decorators/required-family-role.decorator';
 import { CurrentFamilyMember } from '../family/decorators/current-family-member.decorator';
 
-@ApiTags('Expense')
+@ApiTags('Recurring Expenses')
 @ApiBearerAuth()
-@Controller('families/:familyId/expenses')
+@Controller('families/:familyId/recurring-expenses')
 @UseGuards(SessionGuard)
-export class ExpenseController {
-  constructor(private readonly expenseService: ExpenseService) {}
+export class RecurringExpenseController {
+  constructor(
+    private readonly recurringExpenseService: RecurringExpenseService,
+  ) {}
 
   @Post()
   @UseGuards(FamilyGuard)
@@ -34,9 +35,9 @@ export class ExpenseController {
   async create(
     @Param('familyId') familyId: string,
     @CurrentUser() user: { id: string },
-    @Body() dto: CreateExpenseDto,
+    @Body() dto: CreateRecurringExpenseDto,
   ) {
-    return this.expenseService.create(familyId, user.id, dto);
+    return this.recurringExpenseService.create(familyId, user.id, dto);
   }
 
   @Get()
@@ -44,16 +45,10 @@ export class ExpenseController {
   @RequiredFamilyRole(FamilyRole.MEMBER)
   async findAll(
     @Param('familyId') familyId: string,
-    @Query() query: QueryExpensesDto,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
   ) {
-    return this.expenseService.findAll(familyId, query);
-  }
-
-  @Get(':id')
-  @UseGuards(FamilyGuard)
-  @RequiredFamilyRole(FamilyRole.MEMBER)
-  async findOne(@Param('familyId') familyId: string, @Param('id') id: string) {
-    return this.expenseService.findOne(id, familyId);
+    return this.recurringExpenseService.findAll(familyId, { page, limit });
   }
 
   @Patch(':id')
@@ -64,9 +59,15 @@ export class ExpenseController {
     @Param('id') id: string,
     @CurrentUser() user: { id: string },
     @CurrentFamilyMember() member: { role: string },
-    @Body() dto: UpdateExpenseDto,
+    @Body() dto: UpdateRecurringExpenseDto,
   ) {
-    return this.expenseService.update(id, familyId, user.id, member.role, dto);
+    return this.recurringExpenseService.update(
+      id,
+      familyId,
+      user.id,
+      member.role,
+      dto,
+    );
   }
 
   @Delete(':id')
@@ -78,6 +79,11 @@ export class ExpenseController {
     @CurrentUser() user: { id: string },
     @CurrentFamilyMember() member: { role: string },
   ) {
-    return this.expenseService.remove(id, familyId, user.id, member.role);
+    return this.recurringExpenseService.remove(
+      id,
+      familyId,
+      user.id,
+      member.role,
+    );
   }
 }

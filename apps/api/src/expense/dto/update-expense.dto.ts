@@ -11,7 +11,9 @@ export class UpdateExpenseDto {
   @IsOptional()
   @IsNumber()
   @Min(0.01)
-  @Transform(({ value }) => (value != null ? Math.trunc(value * 100) / 100 : value))
+  @Transform(({ value }) =>
+    value != null ? Math.trunc(value * 100) / 100 : value,
+  )
   amount?: number;
 
   @IsOptional()

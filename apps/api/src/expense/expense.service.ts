@@ -138,12 +138,7 @@ export class ExpenseService {
     });
   }
 
-  async remove(
-    id: string,
-    familyId: string,
-    userId: string,
-    userRole: string,
-  ) {
+  async remove(id: string, familyId: string, userId: string, userRole: string) {
     const expense = await this.prisma.expense.findUnique({
       where: { id },
       select: expenseSelect,

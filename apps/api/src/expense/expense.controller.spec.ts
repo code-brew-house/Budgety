@@ -131,7 +131,10 @@ describe('ExpenseController', () => {
   describe('update', () => {
     it('should update an expense with user id and member role', async () => {
       const dto: UpdateExpenseDto = { description: 'Updated groceries' };
-      const updatedExpense = { ...mockExpense, description: 'Updated groceries' };
+      const updatedExpense = {
+        ...mockExpense,
+        description: 'Updated groceries',
+      };
 
       mockExpenseService.update.mockResolvedValue(updatedExpense);
 
