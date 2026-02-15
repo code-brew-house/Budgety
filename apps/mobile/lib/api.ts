@@ -1,3 +1,5 @@
+import { router } from 'expo-router';
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
 export async function apiFetch<T>(
@@ -14,6 +16,10 @@ export async function apiFetch<T>(
   });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      router.replace('/(auth)/login');
+      throw new Error('Session expired');
+    }
     const error = await res.json().catch(() => ({ message: res.statusText }));
     throw new Error(error.message || 'API request failed');
   }
