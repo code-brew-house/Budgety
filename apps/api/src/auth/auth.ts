@@ -21,6 +21,14 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  advanced: process.env.COOKIE_DOMAIN
+    ? {
+        crossSubDomainCookies: {
+          enabled: true,
+          domain: process.env.COOKIE_DOMAIN,
+        },
+      }
+    : undefined,
 });
 
 export type Auth = typeof auth;
