@@ -73,7 +73,12 @@ export function useCreateExpense(familyId: string) {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['expenses-infinite', familyId] });
+      await queryClient.cancelQueries({ queryKey: ['expenses', familyId] });
+    },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses-infinite', familyId] });
       queryClient.invalidateQueries({ queryKey: ['expenses', familyId] });
       queryClient.invalidateQueries({ queryKey: ['reports', familyId] });
     },
@@ -100,7 +105,33 @@ export function useDeleteExpense(familyId: string) {
   return useMutation({
     mutationFn: (id: string) =>
       apiFetch(`/families/${familyId}/expenses/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
+    onMutate: async (deletedId) => {
+      await queryClient.cancelQueries({ queryKey: ['expenses-infinite', familyId] });
+      const previousData = queryClient.getQueriesData({ queryKey: ['expenses-infinite', familyId] });
+      queryClient.setQueriesData(
+        { queryKey: ['expenses-infinite', familyId] },
+        (old: any) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page: any) => ({
+              ...page,
+              data: page.data.filter((e: Expense) => e.id !== deletedId),
+            })),
+          };
+        },
+      );
+      return { previousData };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousData) {
+        for (const [queryKey, data] of context.previousData) {
+          queryClient.setQueryData(queryKey, data);
+        }
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses-infinite', familyId] });
       queryClient.invalidateQueries({ queryKey: ['expenses', familyId] });
       queryClient.invalidateQueries({ queryKey: ['reports', familyId] });
     },
