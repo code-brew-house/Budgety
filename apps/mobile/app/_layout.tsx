@@ -5,6 +5,7 @@ import Toast from 'react-native-toast-message';
 import { queryClient } from '@/lib/queryClient';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { OfflineBanner } from '@/components/OfflineBanner';
 
 export default function RootLayout() {
   return (
@@ -12,6 +13,7 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <GluestackUIProvider>
           <Slot />
+          <OfflineBanner />
           <Toast />
         </GluestackUIProvider>
       </QueryClientProvider>
