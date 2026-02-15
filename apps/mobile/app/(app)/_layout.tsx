@@ -59,6 +59,10 @@ export default function AppLayout() {
         name="recurring-expenses/index"
         options={{ headerShown: true, title: 'Recurring Expenses', presentation: 'modal' }}
       />
+      <Stack.Screen
+        name="expense/[id]"
+        options={{ headerShown: true, title: 'Expense Detail', presentation: 'modal' }}
+      />
     </Stack>
   );
 }

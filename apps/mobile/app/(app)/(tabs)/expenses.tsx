@@ -102,7 +102,9 @@ export default function ExpensesScreen() {
         data={expenses}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <ExpenseCard expense={item} onDelete={(id) => deleteExpense.mutate(id)} />
+          <TouchableOpacity onPress={() => router.push(`/(app)/expense/${item.id}`)}>
+            <ExpenseCard expense={item} onDelete={(id) => deleteExpense.mutate(id)} />
+          </TouchableOpacity>
         )}
         contentContainerStyle={{ paddingVertical: 12 }}
         refreshControl={
