@@ -8,6 +8,7 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "outDir": "./dist"
   }
 }

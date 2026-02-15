@@ -1,0 +1,8 @@
+node_modules
+.next
+dist
+.expo
+.turbo
+*.png
+*.jpg
+*.jpeg
