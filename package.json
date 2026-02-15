@@ -6,7 +6,8 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "dev:mobile": "turbo run dev --filter=mobile",
-    "dev:api": "turbo run dev --filter=api"
+    "dev:api": "turbo run dev --filter=api",
+    "dev:web": "turbo run dev --filter=web"
   },
   "devDependencies": {
     "turbo": "^2"
