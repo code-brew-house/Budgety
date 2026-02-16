@@ -13,7 +13,6 @@ import {
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { IconPlus } from '@tabler/icons-react';
-import { notifications } from '@mantine/notifications';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ExpenseListSkeleton } from '@/components/skeletons/ExpenseListSkeleton';
@@ -22,6 +21,7 @@ import { useFamilyStore } from '@/stores/familyStore';
 import { useFamilyDetail } from '@/hooks/useFamilies';
 import { useInfiniteExpenses, useDeleteExpense } from '@/hooks/useExpenses';
 import { useCategories } from '@/hooks/useCategories';
+import { useDeleteWithUndo } from '@/hooks/useDeleteWithUndo';
 import { SwipeableExpenseCard } from '@/components/SwipeableExpenseCard';
 
 export default function ExpensesPage() {
@@ -56,6 +56,11 @@ export default function ExpensesPage() {
 
   const deleteMutation = useDeleteExpense(activeFamilyId ?? '');
 
+  const { scheduleDelete } = useDeleteWithUndo({
+    onDelete: (id) => deleteMutation.mutate(id),
+    entityName: 'Expense',
+  });
+
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -82,15 +87,8 @@ export default function ExpensesPage() {
 
   const handleDelete = () => {
     if (!deleteId) return;
-    deleteMutation.mutate(deleteId, {
-      onSuccess: () => {
-        notifications.show({ title: 'Deleted', message: 'Expense deleted successfully', color: 'green' });
-        setDeleteId(null);
-      },
-      onError: () => {
-        notifications.show({ title: 'Error', message: 'Failed to delete expense', color: 'red' });
-      },
-    });
+    scheduleDelete(deleteId);
+    setDeleteId(null);
   };
 
   if (!activeFamilyId) {
