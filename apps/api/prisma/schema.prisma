@@ -25,6 +25,7 @@ model User {
   recurringExpenses RecurringExpense[]
   sessions          Session[]
   accounts          Account[]
+  notifications     Notification[]
 
   @@map("user")
 }
@@ -102,6 +103,7 @@ model Family {
   recurringExpenses RecurringExpense[]
   categoryBudgets   CategoryBudget[]
   invites           Invite[]
+  notifications     Notification[]
 }
 
 model Invite {
@@ -189,4 +191,21 @@ model RecurringExpense {
   family      Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
   createdById String
   createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Restrict)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String   // BUDGET_THRESHOLD, RECURRING_DUE, EXPENSE_ADDED, MEMBER_JOINED
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyId  String?
+  family    Family?  @relation(fields: [familyId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
 }
