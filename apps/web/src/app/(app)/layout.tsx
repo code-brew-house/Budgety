@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AppNavbar } from '@/components/AppNavbar';
 import { InstallPrompt } from '@/components/InstallPrompt';
+import { PageTransition } from '@/components/PageTransition';
 import { BottomTabs } from '@/components/BottomTabs';
 import { FamilySwitcher } from '@/components/FamilySwitcher';
 import { useFamilies } from '@/hooks/useFamilies';
@@ -87,7 +88,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <AppShell.Main>
         <InstallPrompt />
-        {children}
+        <PageTransition>{children}</PageTransition>
       </AppShell.Main>
     </AppShell>
   );
