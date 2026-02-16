@@ -70,7 +70,40 @@ export function useCreateExpense(familyId: string) {
   return useMutation({
     mutationFn: (data: { amount: number; description: string; date: string; categoryId: string }) =>
       apiFetch<Expense>(`/families/${familyId}/expenses`, { method: 'POST', body: JSON.stringify(data) }),
-    onSuccess: () => {
+    onMutate: async (newExpense) => {
+      await queryClient.cancelQueries({ queryKey: ['expenses', familyId] });
+      await queryClient.cancelQueries({ queryKey: ['expenses-infinite', familyId] });
+
+      const previousExpenses = queryClient.getQueryData(['expenses', familyId]);
+
+      const optimistic: Partial<Expense> = {
+        id: `temp-${Date.now()}`,
+        amount: newExpense.amount,
+        description: newExpense.description,
+        date: newExpense.date,
+        categoryId: newExpense.categoryId,
+        familyId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        createdById: '',
+        category: { id: newExpense.categoryId, name: '', icon: null },
+        createdBy: { id: '', name: '', displayName: null, avatarUrl: null },
+      };
+
+      queryClient.setQueryData(
+        ['expenses', familyId],
+        (old: PaginatedExpenses | undefined) =>
+          old ? { ...old, data: [optimistic as Expense, ...old.data], total: old.total + 1 } : old,
+      );
+
+      return { previousExpenses };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousExpenses) {
+        queryClient.setQueryData(['expenses', familyId], context.previousExpenses);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses-infinite', familyId] });
       queryClient.invalidateQueries({ queryKey: ['expenses', familyId] });
       queryClient.invalidateQueries({ queryKey: ['reports', familyId] });
@@ -83,7 +116,31 @@ export function useUpdateExpense(familyId: string) {
   return useMutation({
     mutationFn: ({ id, ...data }: { id: string; amount?: number; description?: string; date?: string; categoryId?: string }) =>
       apiFetch<Expense>(`/families/${familyId}/expenses/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-    onSuccess: () => {
+    onMutate: async (updated) => {
+      await queryClient.cancelQueries({ queryKey: ['expenses', familyId] });
+      const previousExpenses = queryClient.getQueryData(['expenses', familyId]);
+
+      queryClient.setQueryData(
+        ['expenses', familyId],
+        (old: PaginatedExpenses | undefined) =>
+          old
+            ? {
+                ...old,
+                data: old.data.map((e) =>
+                  e.id === updated.id ? { ...e, ...updated, updatedAt: new Date().toISOString() } : e,
+                ),
+              }
+            : old,
+      );
+
+      return { previousExpenses };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousExpenses) {
+        queryClient.setQueryData(['expenses', familyId], context.previousExpenses);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses-infinite', familyId] });
       queryClient.invalidateQueries({ queryKey: ['expenses', familyId] });
       queryClient.invalidateQueries({ queryKey: ['reports', familyId] });
@@ -96,7 +153,26 @@ export function useDeleteExpense(familyId: string) {
   return useMutation({
     mutationFn: (id: string) =>
       apiFetch(`/families/${familyId}/expenses/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
+    onMutate: async (deletedId) => {
+      await queryClient.cancelQueries({ queryKey: ['expenses', familyId] });
+      const previousExpenses = queryClient.getQueryData(['expenses', familyId]);
+
+      queryClient.setQueryData(
+        ['expenses', familyId],
+        (old: PaginatedExpenses | undefined) =>
+          old
+            ? { ...old, data: old.data.filter((e) => e.id !== deletedId), total: old.total - 1 }
+            : old,
+      );
+
+      return { previousExpenses };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousExpenses) {
+        queryClient.setQueryData(['expenses', familyId], context.previousExpenses);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['expenses-infinite', familyId] });
       queryClient.invalidateQueries({ queryKey: ['expenses', familyId] });
       queryClient.invalidateQueries({ queryKey: ['reports', familyId] });
