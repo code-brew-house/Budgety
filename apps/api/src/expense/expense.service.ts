@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from '../notification/notification.service';
 import { CreateExpenseDto } from './dto/create-expense.dto';
 import { UpdateExpenseDto } from './dto/update-expense.dto';
 import { QueryExpensesDto } from './dto/query-expenses.dto';
@@ -29,10 +30,13 @@ const expenseSelect = {
 
 @Injectable()
 export class ExpenseService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async create(familyId: string, userId: string, dto: CreateExpenseDto) {
-    return this.prisma.expense.create({
+    const expense = await this.prisma.expense.create({
       data: {
         amount: Math.trunc(dto.amount * 100) / 100,
         description: dto.description,
@@ -43,6 +47,82 @@ export class ExpenseService {
       },
       select: expenseSelect,
     });
+
+    // Fire-and-forget: don't block the response
+    this.sendExpenseNotifications(familyId, userId, expense).catch(() => {});
+
+    return expense;
+  }
+
+  private async sendExpenseNotifications(
+    familyId: string,
+    userId: string,
+    expense: {
+      amount: number;
+      description: string;
+      createdBy: { name: string; displayName: string | null };
+      id: string;
+    },
+  ) {
+    const family = await this.prisma.family.findUnique({
+      where: { id: familyId },
+      select: { largeExpenseThreshold: true, monthlyBudget: true },
+    });
+
+    if (!family) return;
+
+    // Large expense notification
+    if (
+      family.largeExpenseThreshold &&
+      expense.amount >= family.largeExpenseThreshold
+    ) {
+      const displayName =
+        expense.createdBy.displayName || expense.createdBy.name;
+      await this.notificationService.notifyFamilyMembers({
+        familyId,
+        excludeUserId: userId,
+        type: 'EXPENSE_ADDED',
+        title: 'Large expense added',
+        body: `${displayName} added "${expense.description}" for ₹${expense.amount}`,
+        data: { expenseId: expense.id, familyId },
+      });
+    }
+
+    // Budget threshold notification (80% and 100%)
+    if (family.monthlyBudget) {
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+      const { _sum } = await this.prisma.expense.aggregate({
+        where: {
+          familyId,
+          date: { gte: startOfMonth, lt: endOfMonth },
+        },
+        _sum: { amount: true },
+      });
+
+      const totalSpent = _sum.amount || 0;
+      const utilization = totalSpent / family.monthlyBudget;
+
+      if (utilization >= 1) {
+        await this.notificationService.notifyFamilyMembers({
+          familyId,
+          type: 'BUDGET_THRESHOLD',
+          title: 'Budget exceeded!',
+          body: `Monthly spending has exceeded the budget of ₹${family.monthlyBudget}`,
+          data: { familyId, utilization: Math.round(utilization * 100) },
+        });
+      } else if (utilization >= 0.8) {
+        await this.notificationService.notifyFamilyMembers({
+          familyId,
+          type: 'BUDGET_THRESHOLD',
+          title: 'Budget alert: 80% used',
+          body: `Monthly spending has reached ${Math.round(utilization * 100)}% of the budget`,
+          data: { familyId, utilization: Math.round(utilization * 100) },
+        });
+      }
+    }
   }
 
   async findAll(familyId: string, query: QueryExpensesDto) {

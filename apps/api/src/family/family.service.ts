@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from '../notification/notification.service';
 import { FamilyRole } from '@prisma/client';
 import { CreateFamilyDto } from './dto/create-family.dto';
 import { UpdateFamilyDto } from './dto/update-family.dto';
@@ -38,7 +39,10 @@ const memberSelect = {
 
 @Injectable()
 export class FamilyService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService,
+  ) {}
 
   async create(userId: string, dto: CreateFamilyDto) {
     return this.prisma.$transaction(async (tx) => {
@@ -176,7 +180,7 @@ export class FamilyService {
   }
 
   async joinFamily(userId: string, code: string) {
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const invite = await tx.invite.findFirst({
         where: {
           code,
@@ -216,10 +220,26 @@ export class FamilyService {
         },
       });
 
-      return tx.family.findUnique({
+      const family = await tx.family.findUnique({
         where: { id: invite.familyId },
         select: familySelect,
       });
+
+      return { family, familyId: invite.familyId };
     });
+
+    // Fire-and-forget notification
+    this.notificationService
+      .notifyFamilyMembers({
+        familyId: result.familyId,
+        excludeUserId: userId,
+        type: 'MEMBER_JOINED',
+        title: 'New member joined',
+        body: 'A new member has joined the family',
+        data: { familyId: result.familyId, userId },
+      })
+      .catch(() => {});
+
+    return result.family;
   }
 }

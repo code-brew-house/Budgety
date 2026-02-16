@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { FamilyService } from './family.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationService } from '../notification/notification.service';
 import { CreateFamilyDto } from './dto/create-family.dto';
 import { UpdateFamilyDto } from './dto/update-family.dto';
 
@@ -61,6 +62,10 @@ describe('FamilyService', () => {
     $transaction: jest.fn(),
   };
 
+  const mockNotificationService = {
+    notifyFamilyMembers: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -68,6 +73,10 @@ describe('FamilyService', () => {
         {
           provide: PrismaService,
           useValue: mockPrismaService,
+        },
+        {
+          provide: NotificationService,
+          useValue: mockNotificationService,
         },
       ],
     }).compile();
@@ -434,6 +443,14 @@ describe('FamilyService', () => {
 
       expect(result).toEqual(mockFamily);
       expect(prisma.$transaction).toHaveBeenCalled();
+      expect(mockNotificationService.notifyFamilyMembers).toHaveBeenCalledWith({
+        familyId: 'family-123',
+        excludeUserId: 'user-456',
+        type: 'MEMBER_JOINED',
+        title: 'New member joined',
+        body: 'A new member has joined the family',
+        data: { familyId: 'family-123', userId: 'user-456' },
+      });
     });
 
     it('should throw on invalid/expired code', async () => {
