@@ -161,3 +161,20 @@ export interface Invite {
   code: string;
   expiresAt: string;
 }
+
+export interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  data: Record<string, unknown> | null;
+  isRead: boolean;
+  createdAt: string;
+  userId: string;
+  familyId: string | null;
+}
+
+export interface PaginatedNotifications {
+  data: Notification[];
+  total: number;
+}
