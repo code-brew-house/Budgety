@@ -14,6 +14,7 @@ import { PageTransition } from '@/components/PageTransition';
 import { BottomTabs } from '@/components/BottomTabs';
 import { PullToRefresh } from '@/components/PullToRefresh';
 import { FamilySwitcher } from '@/components/FamilySwitcher';
+import { NotificationCenter } from '@/components/NotificationCenter';
 import { useFamilies } from '@/hooks/useFamilies';
 import { useFamilyStore } from '@/stores/familyStore';
 import { useSession } from '@/lib/auth';
@@ -67,6 +68,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </Group>
           <Group>
             {isMobile && <FamilySwitcher families={families} />}
+            <NotificationCenter />
             <ActionIcon
               component={Link}
               href="/expenses/add"
