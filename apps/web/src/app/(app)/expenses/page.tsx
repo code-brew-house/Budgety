@@ -4,25 +4,15 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Title,
   Text,
-  Card,
   Group,
   Stack,
   Select,
   Button,
-  ActionIcon,
-  Menu,
   Modal,
   Skeleton,
-  Badge,
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
-import {
-  IconDots,
-  IconEdit,
-  IconTrash,
-  IconPlus,
-  IconAlertTriangle,
-} from '@tabler/icons-react';
+import { IconPlus } from '@tabler/icons-react';
 import { notifications } from '@mantine/notifications';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -32,7 +22,7 @@ import { useFamilyStore } from '@/stores/familyStore';
 import { useFamilyDetail } from '@/hooks/useFamilies';
 import { useInfiniteExpenses, useDeleteExpense } from '@/hooks/useExpenses';
 import { useCategories } from '@/hooks/useCategories';
-import { formatCurrency } from '@/lib/formatINR';
+import { SwipeableExpenseCard } from '@/components/SwipeableExpenseCard';
 
 export default function ExpensesPage() {
   const router = useRouter();
@@ -159,57 +149,15 @@ export default function ExpensesPage() {
         <EmptyState type="expenses" />
       ) : (
         <Stack gap="xs">
-          {allExpenses.map((expense) => {
-            const isLarge = largeThreshold > 0 && expense.amount >= largeThreshold;
-            return (
-              <Card key={expense.id} withBorder>
-                <Group justify="space-between" wrap="nowrap">
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Group gap="xs" wrap="nowrap">
-                      <Text size="sm" fw={500} truncate>
-                        {expense.description}
-                      </Text>
-                      {isLarge && (
-                        <Badge size="xs" color="red" variant="light" leftSection={<IconAlertTriangle size={10} />}>
-                          Large
-                        </Badge>
-                      )}
-                    </Group>
-                    <Text size="xs" c="dimmed">
-                      {expense.category?.name} &middot;{' '}
-                      {new Date(expense.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} &middot;{' '}
-                      {expense.createdBy?.displayName || expense.createdBy?.name}
-                    </Text>
-                  </div>
-                  <Group gap="xs" wrap="nowrap">
-                    <Text size="sm" fw={600}>{formatCurrency(expense.amount)}</Text>
-                    <Menu position="bottom-end" withArrow>
-                      <Menu.Target>
-                        <ActionIcon variant="subtle" size="sm">
-                          <IconDots size={16} />
-                        </ActionIcon>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        <Menu.Item
-                          leftSection={<IconEdit size={14} />}
-                          onClick={() => router.push(`/expenses/${expense.id}`)}
-                        >
-                          Edit
-                        </Menu.Item>
-                        <Menu.Item
-                          leftSection={<IconTrash size={14} />}
-                          color="red"
-                          onClick={() => setDeleteId(expense.id)}
-                        >
-                          Delete
-                        </Menu.Item>
-                      </Menu.Dropdown>
-                    </Menu>
-                  </Group>
-                </Group>
-              </Card>
-            );
-          })}
+          {allExpenses.map((expense) => (
+              <SwipeableExpenseCard
+                key={expense.id}
+                expense={expense}
+                isLargeExpense={largeThreshold > 0 && expense.amount >= largeThreshold}
+                onClick={(id) => router.push(`/expenses/${id}`)}
+                onDelete={(id) => setDeleteId(id)}
+              />
+          ))}
 
           <div ref={loadMoreRef} style={{ height: 1 }} />
           {isFetchingNextPage && (
