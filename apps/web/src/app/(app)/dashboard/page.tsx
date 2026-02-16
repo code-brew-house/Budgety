@@ -12,6 +12,7 @@ import {
   Badge,
 } from '@mantine/core';
 import { DashboardSkeleton } from '@/components/skeletons/DashboardSkeleton';
+import { ErrorFallback } from '@/components/ErrorFallback';
 import { useFamilyStore } from '@/stores/familyStore';
 import { useFamilyDetail } from '@/hooks/useFamilies';
 import { useExpenses } from '@/hooks/useExpenses';
@@ -26,9 +27,9 @@ function getCurrentMonth() {
 export default function DashboardPage() {
   const activeFamilyId = useFamilyStore((s) => s.activeFamilyId);
   const month = getCurrentMonth();
-  const { data: family, isPending: familyPending } = useFamilyDetail(activeFamilyId);
-  const { data: spending, isPending: spendingPending } = useMemberSpending(activeFamilyId, month);
-  const { data: recentExpenses, isPending: expensesPending } = useExpenses(activeFamilyId, {
+  const { data: family, isPending: familyPending, isError: familyError, refetch: refetchFamily } = useFamilyDetail(activeFamilyId);
+  const { data: spending, isPending: spendingPending, isError: spendingError, refetch: refetchSpending } = useMemberSpending(activeFamilyId, month);
+  const { data: recentExpenses, isPending: expensesPending, isError: expensesError, refetch: refetchExpenses } = useExpenses(activeFamilyId, {
     limit: 10,
     sort: 'createdAt',
   });
@@ -44,6 +45,9 @@ export default function DashboardPage() {
 
   const isLoading = familyPending || spendingPending || expensesPending;
   if (isLoading) return <DashboardSkeleton />;
+
+  const isError = familyError || spendingError || expensesError;
+  if (isError) return <ErrorFallback onRetry={() => { refetchFamily(); refetchSpending(); refetchExpenses(); }} />;
 
   const hasBudget = (family?.monthlyBudget ?? 0) > 0;
   const totalSpent = spending?.totalSpent ?? 0;

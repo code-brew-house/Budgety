@@ -16,6 +16,7 @@ import { BarChart } from '@mantine/charts';
 import { LineChart } from '@mantine/charts';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { ReportsSkeleton } from '@/components/skeletons/ReportsSkeleton';
+import { ErrorFallback } from '@/components/ErrorFallback';
 import { useFamilyStore } from '@/stores/familyStore';
 import {
   useCategorySplit,
@@ -54,9 +55,9 @@ export default function ReportsPage() {
   const activeFamilyId = useFamilyStore((s) => s.activeFamilyId);
   const [month, setMonth] = useState(getCurrentMonth);
 
-  const { data: categorySplit, isPending: categoryPending } = useCategorySplit(activeFamilyId, month);
-  const { data: dailySpending, isPending: dailyPending } = useDailySpending(activeFamilyId, month);
-  const { data: monthlyTrend, isPending: trendPending } = useMonthlyTrend(activeFamilyId, 6);
+  const { data: categorySplit, isPending: categoryPending, isError: categoryError, refetch: refetchCategory } = useCategorySplit(activeFamilyId, month);
+  const { data: dailySpending, isPending: dailyPending, isError: dailyError, refetch: refetchDaily } = useDailySpending(activeFamilyId, month);
+  const { data: monthlyTrend, isPending: trendPending, isError: trendError, refetch: refetchTrend } = useMonthlyTrend(activeFamilyId, 6);
   const { data: budgetUtil } = useBudgetUtilization(activeFamilyId, month);
   const { data: memberSpending } = useMemberSpending(activeFamilyId, month);
   const { data: topExpenses } = useTopExpenses(activeFamilyId, month, 5);
@@ -72,6 +73,9 @@ export default function ReportsPage() {
 
   const isLoading = categoryPending || dailyPending || trendPending;
   if (isLoading) return <ReportsSkeleton />;
+
+  const isError = categoryError || dailyError || trendError;
+  if (isError) return <ErrorFallback onRetry={() => { refetchCategory(); refetchDaily(); refetchTrend(); }} />;
 
   const pieData = (categorySplit?.categories ?? []).map((c, i) => ({
     name: c.name,

@@ -16,6 +16,7 @@ import { IconPlus } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ExpenseListSkeleton } from '@/components/skeletons/ExpenseListSkeleton';
+import { ErrorFallback } from '@/components/ErrorFallback';
 import { EmptyState } from '@/components/EmptyState';
 import { useFamilyStore } from '@/stores/familyStore';
 import { useFamilyDetail } from '@/hooks/useFamilies';
@@ -52,6 +53,8 @@ export default function ExpensesPage() {
     hasNextPage,
     isFetchingNextPage,
     isPending,
+    isError,
+    refetch,
   } = useInfiniteExpenses(activeFamilyId, filters);
 
   const deleteMutation = useDeleteExpense(activeFamilyId ?? '');
@@ -101,6 +104,8 @@ export default function ExpensesPage() {
   }
 
   const categoryOptions = (categories ?? []).map((c) => ({ value: c.id, label: c.name }));
+
+  if (isError) return <ErrorFallback onRetry={() => { refetch(); }} />;
 
   return (
     <Stack>

@@ -6,6 +6,7 @@ import { Paper, Group, Stack, Text, ThemeIcon, ActionIcon } from '@mantine/core'
 import { IconTrash } from '@tabler/icons-react';
 import { useMediaQuery } from '@mantine/hooks';
 import type { Expense } from '@/lib/types';
+import { CategoryIcon } from '@/components/CategoryIcon';
 import { formatCurrency } from '@/lib/formatINR';
 import dayjs from 'dayjs';
 
@@ -39,7 +40,7 @@ export function SwipeableExpenseCard({ expense, onDelete, onClick, isLargeExpens
     >
       <Group wrap="nowrap">
         <ThemeIcon variant="light" size="lg" radius="xl">
-          <Text size="sm">{expense.category.icon || '💰'}</Text>
+          <CategoryIcon name={expense.category.icon} size={20} />
         </ThemeIcon>
         <Stack gap={2} style={{ flex: 1 }}>
           <Text fw={500} size="sm" lineClamp={1}>{expense.description}</Text>
