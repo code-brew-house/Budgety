@@ -27,6 +27,7 @@ import { notifications } from '@mantine/notifications';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ExpenseListSkeleton } from '@/components/skeletons/ExpenseListSkeleton';
+import { EmptyState } from '@/components/EmptyState';
 import { useFamilyStore } from '@/stores/familyStore';
 import { useFamilyDetail } from '@/hooks/useFamilies';
 import { useInfiniteExpenses, useDeleteExpense } from '@/hooks/useExpenses';
@@ -155,7 +156,7 @@ export default function ExpensesPage() {
       {isPending ? (
         <ExpenseListSkeleton />
       ) : allExpenses.length === 0 ? (
-        <Text c="dimmed" ta="center" mt="xl">No expenses found</Text>
+        <EmptyState type="expenses" />
       ) : (
         <Stack gap="xs">
           {allExpenses.map((expense) => {
