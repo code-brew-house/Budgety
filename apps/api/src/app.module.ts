@@ -12,6 +12,7 @@ import { CategoryModule } from './category/category.module';
 import { ExpenseModule } from './expense/expense.module';
 import { BudgetModule } from './budget/budget.module';
 import { ReportModule } from './report/report.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ReportModule } from './report/report.module';
     ExpenseModule,
     BudgetModule,
     ReportModule,
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

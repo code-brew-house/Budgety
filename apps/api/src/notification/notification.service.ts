@@ -31,7 +31,8 @@ export class NotificationService {
         body: dto.body,
         userId: dto.userId,
         familyId: dto.familyId,
-        data: dto.data,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        data: dto.data as any,
       },
     });
   }
