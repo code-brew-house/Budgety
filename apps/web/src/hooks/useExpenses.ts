@@ -68,6 +68,8 @@ export function useExpense(familyId: string | null, expenseId: string | null) {
 export function useCreateExpense(familyId: string) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['createExpense', familyId],
+    networkMode: 'offlineFirst',
     mutationFn: (data: { amount: number; description: string; date: string; categoryId: string }) =>
       apiFetch<Expense>(`/families/${familyId}/expenses`, { method: 'POST', body: JSON.stringify(data) }),
     onMutate: async (newExpense) => {
@@ -114,6 +116,8 @@ export function useCreateExpense(familyId: string) {
 export function useUpdateExpense(familyId: string) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['updateExpense', familyId],
+    networkMode: 'offlineFirst',
     mutationFn: ({ id, ...data }: { id: string; amount?: number; description?: string; date?: string; categoryId?: string }) =>
       apiFetch<Expense>(`/families/${familyId}/expenses/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
     onMutate: async (updated) => {
@@ -151,6 +155,8 @@ export function useUpdateExpense(familyId: string) {
 export function useDeleteExpense(familyId: string) {
   const queryClient = useQueryClient();
   return useMutation({
+    mutationKey: ['deleteExpense', familyId],
+    networkMode: 'offlineFirst',
     mutationFn: (id: string) =>
       apiFetch(`/families/${familyId}/expenses/${id}`, { method: 'DELETE' }),
     onMutate: async (deletedId) => {
