@@ -10,6 +10,7 @@ import { AppNavbar } from '@/components/AppNavbar';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { PageTransition } from '@/components/PageTransition';
 import { BottomTabs } from '@/components/BottomTabs';
+import { PullToRefresh } from '@/components/PullToRefresh';
 import { FamilySwitcher } from '@/components/FamilySwitcher';
 import { useFamilies } from '@/hooks/useFamilies';
 import { useFamilyStore } from '@/stores/familyStore';
@@ -88,7 +89,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <AppShell.Main>
         <InstallPrompt />
-        <PageTransition>{children}</PageTransition>
+        <PullToRefresh>
+          <PageTransition>{children}</PageTransition>
+        </PullToRefresh>
       </AppShell.Main>
     </AppShell>
   );
