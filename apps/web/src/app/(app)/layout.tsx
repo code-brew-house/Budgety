@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { AppShell, Burger, Group, Text, ActionIcon } from '@mantine/core';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import { IconPlus } from '@tabler/icons-react';
+import { NavigationProgress } from '@mantine/nprogress';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AppNavbar } from '@/components/AppNavbar';
@@ -53,6 +54,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       footer={isMobile ? { height: 60 } : undefined}
       padding="md"
     >
+      <NavigationProgress />
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Group>
