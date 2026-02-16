@@ -8,6 +8,7 @@ import { NavigationProgress } from '@mantine/nprogress';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AppNavbar } from '@/components/AppNavbar';
+import { OfflineBanner } from '@/components/OfflineBanner';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { PageTransition } from '@/components/PageTransition';
 import { BottomTabs } from '@/components/BottomTabs';
@@ -55,6 +56,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       padding="md"
     >
       <NavigationProgress />
+      <OfflineBanner />
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
           <Group>
