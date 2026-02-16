@@ -7,6 +7,7 @@ import { IconPlus } from '@tabler/icons-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AppNavbar } from '@/components/AppNavbar';
+import { InstallPrompt } from '@/components/InstallPrompt';
 import { BottomTabs } from '@/components/BottomTabs';
 import { FamilySwitcher } from '@/components/FamilySwitcher';
 import { useFamilies } from '@/hooks/useFamilies';
@@ -84,7 +85,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </AppShell.Footer>
       )}
 
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main>
+        <InstallPrompt />
+        {children}
+      </AppShell.Main>
     </AppShell>
   );
 }
