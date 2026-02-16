@@ -15,6 +15,7 @@ import { PieChart } from '@mantine/charts';
 import { BarChart } from '@mantine/charts';
 import { LineChart } from '@mantine/charts';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { ReportsSkeleton } from '@/components/skeletons/ReportsSkeleton';
 import { useFamilyStore } from '@/stores/familyStore';
 import {
   useCategorySplit,
@@ -53,9 +54,9 @@ export default function ReportsPage() {
   const activeFamilyId = useFamilyStore((s) => s.activeFamilyId);
   const [month, setMonth] = useState(getCurrentMonth);
 
-  const { data: categorySplit } = useCategorySplit(activeFamilyId, month);
-  const { data: dailySpending } = useDailySpending(activeFamilyId, month);
-  const { data: monthlyTrend } = useMonthlyTrend(activeFamilyId, 6);
+  const { data: categorySplit, isPending: categoryPending } = useCategorySplit(activeFamilyId, month);
+  const { data: dailySpending, isPending: dailyPending } = useDailySpending(activeFamilyId, month);
+  const { data: monthlyTrend, isPending: trendPending } = useMonthlyTrend(activeFamilyId, 6);
   const { data: budgetUtil } = useBudgetUtilization(activeFamilyId, month);
   const { data: memberSpending } = useMemberSpending(activeFamilyId, month);
   const { data: topExpenses } = useTopExpenses(activeFamilyId, month, 5);
@@ -68,6 +69,9 @@ export default function ReportsPage() {
       </Stack>
     );
   }
+
+  const isLoading = categoryPending || dailyPending || trendPending;
+  if (isLoading) return <ReportsSkeleton />;
 
   const pieData = (categorySplit?.categories ?? []).map((c, i) => ({
     name: c.name,

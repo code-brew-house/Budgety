@@ -26,6 +26,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { ExpenseListSkeleton } from '@/components/skeletons/ExpenseListSkeleton';
 import { useFamilyStore } from '@/stores/familyStore';
 import { useFamilyDetail } from '@/hooks/useFamilies';
 import { useInfiniteExpenses, useDeleteExpense } from '@/hooks/useExpenses';
@@ -152,11 +153,7 @@ export default function ExpensesPage() {
       </Group>
 
       {isPending ? (
-        <Stack gap="xs">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} height={60} />
-          ))}
-        </Stack>
+        <ExpenseListSkeleton />
       ) : allExpenses.length === 0 ? (
         <Text c="dimmed" ta="center" mt="xl">No expenses found</Text>
       ) : (
