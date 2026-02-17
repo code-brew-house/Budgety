@@ -10,6 +10,7 @@
     "dev:web": "turbo run dev --filter=web"
   },
   "devDependencies": {
+    "sharp": "^0.34.5",
     "turbo": "^2"
   },
   "packageManager": "pnpm@10.11.1"
