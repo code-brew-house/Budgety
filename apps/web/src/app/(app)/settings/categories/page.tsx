@@ -23,6 +23,8 @@ import {
   useUpdateCategory,
   useDeleteCategory,
 } from '@/hooks/useCategories';
+import { EmojiPickerPopover } from '@/components/EmojiPickerPopover';
+import { CategoryIcon } from '@/components/CategoryIcon';
 
 export default function CategoriesPage() {
   const activeFamilyId = useFamilyStore((s) => s.activeFamilyId);
@@ -33,8 +35,10 @@ export default function CategoriesPage() {
   const deleteCategory = useDeleteCategory(activeFamilyId ?? '');
 
   const [newName, setNewName] = useState('');
-  const [editTarget, setEditTarget] = useState<{ id: string; name: string } | null>(null);
+  const [newIcon, setNewIcon] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<{ id: string; name: string; icon: string | null } | null>(null);
   const [editName, setEditName] = useState('');
+  const [editIcon, setEditIcon] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   if (!activeFamilyId) {
@@ -49,10 +53,11 @@ export default function CategoriesPage() {
   const handleCreate = () => {
     if (!newName.trim()) return;
     createCategory.mutate(
-      { name: newName.trim() },
+      { name: newName.trim(), ...(newIcon ? { icon: newIcon } : {}) },
       {
         onSuccess: () => {
           setNewName('');
+          setNewIcon(null);
           notifications.show({ title: 'Category created', message: 'New category added.', color: 'green' });
         },
       },
@@ -62,11 +67,11 @@ export default function CategoriesPage() {
   const handleUpdate = () => {
     if (!editTarget || !editName.trim()) return;
     updateCategory.mutate(
-      { id: editTarget.id, name: editName.trim() },
+      { id: editTarget.id, name: editName.trim(), ...(editIcon !== undefined ? { icon: editIcon ?? undefined } : {}) },
       {
         onSuccess: () => {
           setEditTarget(null);
-          notifications.show({ title: 'Category updated', message: 'Category name changed.', color: 'green' });
+          notifications.show({ title: 'Category updated', message: 'Category updated.', color: 'green' });
         },
       },
     );
@@ -90,6 +95,7 @@ export default function CategoriesPage() {
       <Card withBorder>
         <Text fw={500} mb="sm">Add Category</Text>
         <Group>
+          <EmojiPickerPopover value={newIcon} onChange={setNewIcon} />
           <TextInput
             placeholder="Category name"
             value={newName}
@@ -113,22 +119,24 @@ export default function CategoriesPage() {
             <Card key={cat.id} withBorder p="sm">
               <Group justify="space-between">
                 <Group gap="xs">
+                  <CategoryIcon name={cat.icon} />
                   <Text size="sm" fw={500}>{cat.name}</Text>
                   {cat.isDefault && (
                     <Badge size="xs" variant="light" color="gray">Default</Badge>
                   )}
                 </Group>
-                {!cat.isDefault && (
-                  <Group gap="xs">
-                    <ActionIcon
-                      variant="subtle"
-                      onClick={() => {
-                        setEditTarget({ id: cat.id, name: cat.name });
-                        setEditName(cat.name);
-                      }}
-                    >
-                      <IconEdit size={16} />
-                    </ActionIcon>
+                <Group gap="xs">
+                  <ActionIcon
+                    variant="subtle"
+                    onClick={() => {
+                      setEditTarget({ id: cat.id, name: cat.name, icon: cat.icon });
+                      setEditName(cat.name);
+                      setEditIcon(cat.icon);
+                    }}
+                  >
+                    <IconEdit size={16} />
+                  </ActionIcon>
+                  {!cat.isDefault && (
                     <ActionIcon
                       color="red"
                       variant="subtle"
@@ -136,8 +144,8 @@ export default function CategoriesPage() {
                     >
                       <IconTrash size={16} />
                     </ActionIcon>
-                  </Group>
-                )}
+                  )}
+                </Group>
               </Group>
             </Card>
           ))}
@@ -147,11 +155,15 @@ export default function CategoriesPage() {
       {/* Edit Modal */}
       <Modal opened={!!editTarget} onClose={() => setEditTarget(null)} title="Edit Category">
         <Stack>
-          <TextInput
-            label="Category Name"
-            value={editName}
-            onChange={(e) => setEditName(e.currentTarget.value)}
-          />
+          <Group>
+            <EmojiPickerPopover value={editIcon} onChange={setEditIcon} />
+            <TextInput
+              label="Category Name"
+              value={editName}
+              onChange={(e) => setEditName(e.currentTarget.value)}
+              style={{ flex: 1 }}
+            />
+          </Group>
           <Button onClick={handleUpdate} loading={updateCategory.isPending}>
             Save
           </Button>
