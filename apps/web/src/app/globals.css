@@ -1,0 +1,7 @@
+/* Remove browser focus outline on chart containers (Recharts role="application") */
+.mantine-BarChart-root,
+.mantine-LineChart-root,
+.mantine-PieChart-root,
+.mantine-AreaChart-root {
+  outline: none;
+}
