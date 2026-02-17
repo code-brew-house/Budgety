@@ -8,18 +8,18 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 const defaultCategories = [
-  { name: 'Groceries/Kirana', icon: 'shopping-cart', isDefault: true },
-  { name: 'Rent', icon: 'home', isDefault: true },
-  { name: 'Utilities', icon: 'zap', isDefault: true },
-  { name: 'Transport', icon: 'car', isDefault: true },
-  { name: 'Medical/Health', icon: 'heart-pulse', isDefault: true },
-  { name: 'Education', icon: 'graduation-cap', isDefault: true },
-  { name: 'Dining Out', icon: 'utensils', isDefault: true },
-  { name: 'Entertainment', icon: 'film', isDefault: true },
-  { name: 'Shopping', icon: 'shopping-bag', isDefault: true },
-  { name: 'EMI/Loans', icon: 'landmark', isDefault: true },
-  { name: 'Household Help', icon: 'hand-helping', isDefault: true },
-  { name: 'Mobile/Internet', icon: 'wifi', isDefault: true },
+  { name: 'Groceries/Kirana', icon: '🛒', isDefault: true },
+  { name: 'Rent', icon: '🏠', isDefault: true },
+  { name: 'Utilities', icon: '⚡', isDefault: true },
+  { name: 'Transport', icon: '🚗', isDefault: true },
+  { name: 'Medical/Health', icon: '🏥', isDefault: true },
+  { name: 'Education', icon: '🎓', isDefault: true },
+  { name: 'Dining Out', icon: '🍽️', isDefault: true },
+  { name: 'Entertainment', icon: '🎬', isDefault: true },
+  { name: 'Shopping', icon: '🛍️', isDefault: true },
+  { name: 'EMI/Loans', icon: '🏦', isDefault: true },
+  { name: 'Household Help', icon: '🤝', isDefault: true },
+  { name: 'Mobile/Internet', icon: '📶', isDefault: true },
 ];
 
 async function main() {
