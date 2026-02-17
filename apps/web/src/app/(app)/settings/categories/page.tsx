@@ -99,7 +99,7 @@ export default function CategoriesPage() {
           <TextInput
             placeholder="Category name"
             value={newName}
-            onChange={(e) => setNewName(e.currentTarget.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewName(e.currentTarget.value)}
             style={{ flex: 1 }}
           />
           <Button onClick={handleCreate} loading={createCategory.isPending}>
@@ -160,7 +160,7 @@ export default function CategoriesPage() {
             <TextInput
               label="Category Name"
               value={editName}
-              onChange={(e) => setEditName(e.currentTarget.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditName(e.currentTarget.value)}
               style={{ flex: 1 }}
             />
           </Group>
