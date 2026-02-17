@@ -25,8 +25,8 @@ export function FamilySwitcher({ families }: FamilySwitcherProps) {
   return (
     <Menu shadow="md" width={200}>
       <Menu.Target>
-        <Button variant="subtle" rightSection={<IconChevronDown size={14} />} size="compact-sm">
-          {activeFamily?.name ?? 'Select Family'}
+        <Button variant="subtle" rightSection={<IconChevronDown size={14} />} size="compact-sm" style={{ maxWidth: 140 }}>
+          <Text size="sm" truncate>{activeFamily?.name ?? 'Select Family'}</Text>
         </Button>
       </Menu.Target>
       <Menu.Dropdown>

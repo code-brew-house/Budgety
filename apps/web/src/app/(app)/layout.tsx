@@ -12,7 +12,6 @@ import { OfflineBanner } from '@/components/OfflineBanner';
 import { InstallPrompt } from '@/components/InstallPrompt';
 import { PageTransition } from '@/components/PageTransition';
 import { BottomTabs } from '@/components/BottomTabs';
-import { PullToRefresh } from '@/components/PullToRefresh';
 import { FamilySwitcher } from '@/components/FamilySwitcher';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { useFamilies } from '@/hooks/useFamilies';
@@ -59,14 +58,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <NavigationProgress />
       <OfflineBanner />
       <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <Group>
+        <Group h="100%" px="md" justify="space-between" wrap="nowrap">
+          <Group gap="xs" wrap="nowrap">
             {isMobile && (
               <Burger opened={opened} onClick={toggle} size="sm" />
             )}
             <Text fw={700} size="lg">Budgety</Text>
           </Group>
-          <Group>
+          <Group gap="xs" wrap="nowrap">
             {isMobile && <FamilySwitcher families={families} />}
             <NotificationCenter />
             <ActionIcon
@@ -95,9 +94,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       <AppShell.Main>
         <InstallPrompt />
-        <PullToRefresh>
-          <PageTransition>{children}</PageTransition>
-        </PullToRefresh>
+        <PageTransition>{children}</PageTransition>
       </AppShell.Main>
     </AppShell>
   );
