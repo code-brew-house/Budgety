@@ -7,7 +7,8 @@
     "lint": "turbo run lint",
     "dev:mobile": "turbo run dev --filter=mobile",
     "dev:api": "turbo run dev --filter=api",
-    "dev:web": "turbo run dev --filter=web"
+    "dev:web": "turbo run dev --filter=web",
+    "generate:icons": "node scripts/generate-icons.mjs"
   },
   "devDependencies": {
     "sharp": "^0.34.5",
