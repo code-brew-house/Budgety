@@ -16,7 +16,7 @@ import { FamilySwitcher } from '@/components/FamilySwitcher';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { useFamilies } from '@/hooks/useFamilies';
 import { useFamilyStore } from '@/stores/familyStore';
-import { useSession } from '@/lib/auth';
+import { useSession, signOut } from '@/lib/auth';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [opened, { toggle }] = useDisclosure();
@@ -33,10 +33,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [families, activeFamilyId, setActiveFamilyId]);
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated — sign out first to clear
+  // the stale session cookie so middleware won't bounce us back
   useEffect(() => {
     if (!sessionPending && !session) {
-      router.replace('/login');
+      signOut().then(() => router.replace('/login'));
     }
   }, [session, sessionPending, router]);
 

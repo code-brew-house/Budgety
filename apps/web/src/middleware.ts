@@ -5,12 +5,10 @@ export function middleware(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
   const { pathname } = request.nextUrl;
 
-  // Redirect authenticated users away from auth pages
-  if (sessionCookie && (pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
   // Redirect unauthenticated users to login
+  // Note: we intentionally do NOT redirect authenticated users away from /login
+  // because the cookie may be stale (session expired server-side). The login page
+  // itself handles redirecting already-authenticated users after sign-in.
   if (!sessionCookie && !pathname.startsWith('/login') && !pathname.startsWith('/signup')) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
